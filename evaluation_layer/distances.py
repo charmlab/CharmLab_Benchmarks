@@ -3,9 +3,9 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from evaluation_layer.evaluation_module import EvaluationModule
+from evaluation_layer.evaluation_module import EvaluationObject
 from evaluation_layer.utils import remove_nans
-from data_layer.data_module import DataModule
+from data_layer.data_object import DataObject
 
 
 def l0_distance(delta: np.ndarray) -> List[float]:
@@ -147,12 +147,12 @@ def _get_distances(
     return [[d1[i], d2[i], d3[i], d4[i]] for i in range(len(d1))]
 
 
-class Distance(EvaluationModule):
+class Distance(EvaluationObject):
     """
     Calculates the L0, L1, L2, and L-infty distance measures.
     """
 
-    def __init__(self, data: DataModule, hyperparameters: dict = None):
+    def __init__(self, data: DataObject, hyperparameters: dict = None):
         super().__init__(data, hyperparameters)
         self.columns = ["L0_distance", "L1_distance", "L2_distance", "Linf_distance"]
 

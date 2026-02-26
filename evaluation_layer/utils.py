@@ -2,13 +2,13 @@ from typing import Tuple, Union
 
 import pandas as pd
 import numpy as np
-from data_layer.data_module import DataModule
-from model_layer.model_module import ModelModule
+from data_layer.data_object import DataObject
+from model_layer.model_object import ModelObject
 import logging
 
 
-def check_counterfactuals(model: ModelModule, 
-                          data: DataModule,
+def check_counterfactuals(model: ModelObject, 
+                          data: DataObject,
                           counterfactuals: pd.DataFrame,
                           factual_indices: pd.Index) -> pd.DataFrame:
     """
@@ -19,7 +19,7 @@ def check_counterfactuals(model: ModelModule,
 
     Parameters
     ----------
-    model: ModelModule
+    model: ModelObject
         The model module containing the trained model and its configuration.
     counterfactuals: pd.DataFrame
         The generated counterfactuals to be checked.

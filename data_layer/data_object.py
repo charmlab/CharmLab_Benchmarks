@@ -5,7 +5,7 @@ from sklearn.preprocessing import normalize
 import yaml
 from typing import Dict, Tuple, List, Any
 
-class DataModule:
+class DataObject:
     """
     A unified data ingestion and preprocessing pipeline for algorithmic recourse tasks.
     
@@ -34,7 +34,7 @@ class DataModule:
 
     def __init__(self, data_path: str, config_path: str):
         """
-        Initializes the DataModule by loading the raw data and configuration.
+        Initializes the DataObject by loading the raw data and configuration.
 
         Args:
             data_path (str): The file path to the raw CSV dataset.

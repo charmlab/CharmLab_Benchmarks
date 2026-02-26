@@ -5,22 +5,22 @@ from typing import Optional, Tuple
 from lime.lime_tabular import LimeTabularExplainer
 from sklearn.linear_model import LogisticRegression
 import yaml
-from data_layer.data_module import DataModule
+from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
 from method_layer.ROAR.library.method_utils import roar_recourse
-from method_layer.method_module import MethodModule
-from model_layer.model_module import ModelModule
+from method_layer.method_module import MethodObject
+from model_layer.model_object import ModelObject
 import logging
 
-class ROAR(MethodModule):
+class ROAR(MethodObject):
     """
     Implementation of ROAR [1]_.
 
     .. [1] Upadhyay, S., Joshi, S., & Lakkaraju, H. (2021). Towards Robust and Reliable Algorithmic Recourse. NeurIPS.
     """
 
-    def __init__(self, data: DataModule, 
-                model: ModelModule, 
+    def __init__(self, data: DataObject, 
+                model: ModelObject, 
                 coeffs: Optional[np.ndarray] = None,
                 intercepts: Optional[np.ndarray] = None):
         super().__init__(data, model)

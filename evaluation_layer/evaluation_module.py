@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from data_layer.data_module import DataModule
+from data_layer.data_object import DataObject
 
 
-class EvaluationModule(ABC):
-    def __init__(self, data: DataModule, hyperparameters: dict = None):
+class EvaluationObject(ABC):
+    def __init__(self, data: DataObject, hyperparameters: dict = None):
         """
 
         Parameters
         ----------
-        model:
-            Classification model. (optional)
+        data: DataObject
+            The data object containing the processed data and metadata.
         hyperparameters:
             Dictionary with hyperparameters, could be used to pass other things. (optional)
         """
