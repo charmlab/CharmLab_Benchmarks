@@ -1,5 +1,5 @@
 import yaml
-from typing import Any, List, Union
+from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 import numpy as np
 import torch
@@ -21,7 +21,7 @@ class ModelObject:
     - config: The parsed YAML configuration dictionary for model architecture and training hyperparameters.
     """
 
-    def __init__(self, config_path: str, data_object: DataObject):
+    def __init__(self, config_path: str = None, data_object: DataObject = None, config_override: Optional[Dict[str, Any]] = None):
         """
         Initializes the ModelObject without redundantly loading raw data.
         
@@ -31,8 +31,12 @@ class ModelObject:
                                       the processed data, feature ordering, and bounds.
         """
         self._data_object = data_object
-        self._config = yaml.safe_load(open(config_path, 'r'))
+        self._config = yaml.safe_load(open(config_path, 'r')) if config_path is not None else {}
         self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        # If a pre-merged config is given, use it entirely (it already contains overrides)
+        if config_override is not None:
+            self._config = config_override
 
         self._instantiate_model() # Dynamically instantiate the model based on the config
         self._model.to(self._device) # Move model to GPU if available

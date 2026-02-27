@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
@@ -24,9 +25,10 @@ class MethodObject(ABC):
    
     """
 
-    def __init__(self, data: DataObject, model: ModelObject):
+    def __init__(self, data: DataObject, model: ModelObject, config_override: Optional[Dict[str, Any]] = None):
         self._data = data
         self._model = model
+        self._config_override = config_override
 
     @abstractmethod
     def get_counterfactuals(self, factuals: pd.DataFrame):

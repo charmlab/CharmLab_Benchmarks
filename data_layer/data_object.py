@@ -3,7 +3,7 @@ from sklearn.discriminant_analysis import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import normalize
 import yaml
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Optional, Tuple, List, Any
 
 class DataObject:
     """
@@ -16,8 +16,8 @@ class DataObject:
 
     NOTE: this module will essentially take the place of the existing data module and dataset classes,
     and all the functionality in the loadData method will be transferred here as member functions.
-    The "get_preprocessing()" acts like a controller that, based on confgs, will call appropriate util 
-    funtions. (think large if else block).
+    The "get_preprocessing()" acts like a controller that, based on configs, will call appropriate util 
+    funtions. (think large if-else block).
 
     The attributes and util member methods can be expanded on a method need bases. 
 
@@ -32,19 +32,28 @@ class DataObject:
         metadata (Dict[str, Any]): Generated bounds, constraints, and structural info for features.
     """
 
-    def __init__(self, data_path: str, config_path: str):
+    def __init__(self, data_path: str, config_path: str = None, config_override: Optional[Dict[str, Any]] = None):
         """
         Initializes the DataObject by loading the raw data and configuration.
 
         Args:
             data_path (str): The file path to the raw CSV dataset.
             config_path (str): The file path to the YAML configuration file.
+            config_override (Optional[Dict[str, Any]]): Optional dictionary of config overrides.
         """
         self._metadata = {}
         self._raw_df = pd.read_csv(data_path)
         self._processed_df = self._raw_df.copy() # This will be transformed in place through the preprocessing pipeline.
-        with open(config_path, 'r') as file:
-            self._config = yaml.safe_load(file)
+        
+        if config_path is not None:
+            with open(config_path, 'r') as file:
+                self._config = yaml.safe_load(file)
+        else:
+            self._config = {}
+
+        # If a pre-merged config is given, use it entirely (it already contains overrides)
+        if config_override is not None:
+            self._config = config_override
 
         # drop columns not defined in the config
         columns_to_drop = [col for col in self._raw_df.columns if col not in self._config['features'].keys()]

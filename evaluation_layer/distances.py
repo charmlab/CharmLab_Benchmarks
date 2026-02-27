@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from evaluation_layer.evaluation_module import EvaluationObject
+from evaluation_layer.evaluation_factory import register_evaluation
+from evaluation_layer.evaluation_object import EvaluationObject
 from evaluation_layer.utils import remove_nans
 from data_layer.data_object import DataObject
 
@@ -146,7 +147,7 @@ def _get_distances(
 
     return [[d1[i], d2[i], d3[i], d4[i]] for i in range(len(d1))]
 
-
+@register_evaluation("Distance")
 class Distance(EvaluationObject):
     """
     Calculates the L0, L1, L2, and L-infty distance measures.

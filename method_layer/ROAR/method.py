@@ -1,17 +1,21 @@
 
 import pandas as pd
 import numpy as np
-from typing import Optional, Tuple
+from typing import Any, Dict, Dict, Optional, Tuple
 from lime.lime_tabular import LimeTabularExplainer
 from sklearn.linear_model import LogisticRegression
 import yaml
 from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
 from method_layer.ROAR.library.method_utils import roar_recourse
-from method_layer.method_module import MethodObject
+from method_layer.method_factory import register_method
+from method_layer.method_object import MethodObject
 from model_layer.model_object import ModelObject
+from config_utils import deep_merge
 import logging
 
+
+@register_method("ROAR")
 class ROAR(MethodObject):
     """
     Implementation of ROAR [1]_.
@@ -22,11 +26,16 @@ class ROAR(MethodObject):
     def __init__(self, data: DataObject, 
                 model: ModelObject, 
                 coeffs: Optional[np.ndarray] = None,
-                intercepts: Optional[np.ndarray] = None):
-        super().__init__(data, model)
+                intercepts: Optional[np.ndarray] = None,
+                config_override: Optional[Dict[str, Any]] = None):
+        super().__init__(data, model, config_override=config_override)
 
         # get configs from config file
         self.config = yaml.safe_load(open("method_layer/ROAR/library/method_config.yml", 'r'))
+        
+        # merge configs with user specified, if they exist
+        if self._config_override is not None:
+            self.config = deep_merge(self.config, self._config_override)
 
         # store the feature ordering
         self._feature_order = self._data.get_feature_names(expanded=True) # ensure the feature ordering is correct for the model input
