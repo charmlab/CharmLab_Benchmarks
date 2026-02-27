@@ -1,32 +1,41 @@
 
 import pandas as pd
 import numpy as np
-from typing import Optional, Tuple
+from typing import Any, Dict, Dict, Optional, Tuple
 from lime.lime_tabular import LimeTabularExplainer
 from sklearn.linear_model import LogisticRegression
 import yaml
-from data_layer.data_module import DataModule
+from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
 from method_layer.ROAR.library.method_utils import roar_recourse
-from method_layer.method_module import MethodModule
-from model_layer.model_module import ModelModule
+from method_layer.method_factory import register_method
+from method_layer.method_object import MethodObject
+from model_layer.model_object import ModelObject
+from config_utils import deep_merge
 import logging
 
-class ROAR(MethodModule):
+
+@register_method("ROAR")
+class ROAR(MethodObject):
     """
     Implementation of ROAR [1]_.
 
     .. [1] Upadhyay, S., Joshi, S., & Lakkaraju, H. (2021). Towards Robust and Reliable Algorithmic Recourse. NeurIPS.
     """
 
-    def __init__(self, data: DataModule, 
-                model: ModelModule, 
+    def __init__(self, data: DataObject, 
+                model: ModelObject, 
                 coeffs: Optional[np.ndarray] = None,
-                intercepts: Optional[np.ndarray] = None):
-        super().__init__(data, model)
+                intercepts: Optional[np.ndarray] = None,
+                config_override: Optional[Dict[str, Any]] = None):
+        super().__init__(data, model, config_override=config_override)
 
         # get configs from config file
         self.config = yaml.safe_load(open("method_layer/ROAR/library/method_config.yml", 'r'))
+        
+        # merge configs with user specified, if they exist
+        if self._config_override is not None:
+            self.config = deep_merge(self.config, self._config_override)
 
         # store the feature ordering
         self._feature_order = self._data.get_feature_names(expanded=True) # ensure the feature ordering is correct for the model input
@@ -44,6 +53,7 @@ class ROAR(MethodModule):
         self._discretize = self.config['discretize']
         self._sample = self.config['sample']
         self._lime_seed = self.config['lime_seed']
+        self._enforce_encoding = self.config['enforce_encoding']
         self._seed = self.config['seed']
 
         self._coeffs = coeffs
@@ -121,6 +131,7 @@ class ROAR(MethodModule):
                 t_max_min=self._t_max_min,
                 loss_type=self._loss_type,
                 loss_threshold=self._loss_threshold,
+                enforce_encoding=self._enforce_encoding,
                 seed=self._seed,
             )
             cfs.append(counterfactual)
@@ -162,7 +173,6 @@ class ROAR(MethodModule):
                 factual,
                 self._model.predict_proba,
                 num_features=len(self._data.get_feature_names(expanded=True)),
-                # model_regressor=LogisticRegression()
             )
             intercepts.append(explanations.intercept[1])
 
