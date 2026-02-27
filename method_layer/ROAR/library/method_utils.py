@@ -40,9 +40,10 @@ def _calc_max_perturbation(
         (recourse, torch.ones(1, device=recourse.device)), 0
     )  # Add 1 to the feature vector for intercept
 
-    loss_fn = torch.nn.BCELoss()
+    loss_fn = nn.BCELoss()
+
     W.requires_grad = True
-    f_x_new = torch.nn.Sigmoid()(torch.matmul(W, recourse))
+    f_x_new = nn.Sigmoid()(torch.matmul(W, recourse))
     w_loss = loss_fn(f_x_new, target_class)
 
     gradient_w_loss = grad(w_loss, W)[0]
@@ -50,7 +51,7 @@ def _calc_max_perturbation(
     bound = (-delta_max, delta_max)
     bounds = [bound] * len(gradient_w_loss)
 
-    res = linprog(c, bounds=bounds, method="simplex")
+    res = linprog(c, bounds=bounds, method="highs")
 
     if res.status != 0:
         logging.warning("Optimization with respect to delta failed to converge")
@@ -68,14 +69,15 @@ def roar_recourse(
     cat_feature_indices: List[List[int]],
     # binary_cat_features: bool = True,
     feature_costs: Optional[List[float]] = None,
-    lr: float = 0.01,
-    lambda_param: float = 0.01,
-    delta_max: float = 0.01,
+    lr: float = 1e-3,
+    lambda_param: float = 0.1,
+    delta_max: float = 0.1,
     y_target: List[int] = [0, 1],
-    t_max_min: float = 0.5,
+    t_max_min: float = 1,
     norm: int = 1,
     loss_type: str = "BCE",
-    loss_threshold: float = 1e-3,
+    loss_threshold: float = 1e-4,
+    enforce_encoding: bool = False,
     seed: int = 0,
 ) -> np.ndarray:
     """
@@ -126,13 +128,15 @@ def roar_recourse(
     intercept = torch.from_numpy(np.asarray([intercept])).float().to(device)
     x = torch.from_numpy(x).float().to(device)
     y_target = torch.tensor(y_target).float().to(device)
-    print(f"Target class for ROAR: {y_target}")
+    
     lamb = torch.tensor(lambda_param).float().to(device)
+
+    print(f"This is the value of x {x}")
 
     # x_new is used for gradient search in optimizing process
     x_new = Variable(x.clone(), requires_grad=True)
 
-    optimizer = optim.Adam([x_new], lr=lr, amsgrad=True)
+    optimizer = optim.Adam([x_new], lr=lr)
 
     if loss_type == "MSE":
         if len(y_target) != 1:
@@ -155,8 +159,9 @@ def roar_recourse(
         raise ValueError(f"loss_type {loss_type} not supported")
 
     # Placeholder values for first loop
-    loss = torch.tensor(0)
-    loss_diff = loss_threshold + 1
+    loss = torch.tensor(1)
+    loss_diff = 1
+    f_x_new = 0
 
     t0 = datetime.datetime.now()
     t_max = datetime.timedelta(minutes=t_max_min)
@@ -164,28 +169,31 @@ def roar_recourse(
     while loss_diff > loss_threshold:
         loss_prev = loss.clone().detach()
 
-        # x_new_enc is a copy of x_new with reconstructed encoding constraints of x_new
-        # such that categorical data is either 0 or 1
-        # go through the list of categorical features given to us from the
-        # data module and use the list of encoded feature names to reconstruct the encoding constraints for the categorical features in x_new
-        x_new_enc = x_new.clone()
+        if enforce_encoding == True:
+            # x_new_enc is a copy of x_new with reconstructed encoding constraints of x_new
+            # such that categorical data is either 0 or 1
+            # go through the list of categorical features given to us from the
+            # data module and use the list of encoded feature names to reconstruct the encoding constraints for the categorical features in x_new
+            x_new_enc = x_new.clone()
 
-        for cat_feature_group in cat_feature_indices:
-            # We can reconstruct the encoding constraints by taking the argmax of the group of features to find the index of the feature that should be 1 (if any), and setting that feature to 1 and the rest to 0.
-            # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}")
-            
-            max_index = torch.argmax(x_new_enc[cat_feature_group[0]:cat_feature_group[-1]+1]).item() + cat_feature_group[0] # find the index of the maximum value in the group of features corresponding to the categorical feature
-            
-            # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}, max index: {max_index}")
-            for index in cat_feature_group:
-                if index != max_index:
-                    x_new_enc[index] = 0
-                else:
-                    x_new_enc[index] = 1
+            # NOTE: This reconstruction isn't done in original code during CFX search!
+            # Could this lead to results not aligned with the paper?
+            for cat_feature_group in cat_feature_indices:
+                # We can reconstruct the encoding constraints by taking the argmax of the group of features to find the index of the feature that should be 1 (if any), and setting that feature to 1 and the rest to 0.
+                # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}")
+                
+                max_index = torch.argmax(x_new_enc[cat_feature_group[0]:cat_feature_group[-1]+1]).item() + cat_feature_group[0] # find the index of the maximum value in the group of features corresponding to the categorical feature
+                
+                # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}, max index: {max_index}")
+                for index in cat_feature_group:
+                    if index != max_index:
+                        x_new_enc[index] = 0
+                    else:
+                        x_new_enc[index] = 1
 
         # Calculate max delta perturbation on weights
         delta_W, delta_W0 = _calc_max_perturbation(
-            x_new_enc.squeeze(), coeff, intercept, delta_max, target_class
+            x_new.squeeze(), coeff, intercept, delta_max, target_class
         )
         delta_W, delta_W0 = (
             torch.from_numpy(delta_W).float().to(device),
@@ -196,18 +204,14 @@ def roar_recourse(
 
         # get the probability of the target class
         f_x_new = nn.Sigmoid()(
-            torch.matmul(coeff + delta_W, x_new_enc.squeeze()) + intercept + delta_W0
+            torch.matmul(coeff + delta_W, x_new.squeeze()) + intercept + delta_W0
         ).squeeze()
 
         if loss_type == "MSE":
             # single logit score for the target class for MSE loss
             f_x_new = torch.log(f_x_new / (1 - f_x_new))
 
-        cost = (
-            torch.dist(x_new_enc, x, norm)
-            # if feature_costs is None
-            # else torch.norm(feature_costs * (x_new_enc - x), norm)
-        )
+        cost = torch.dist(x_new, x, norm)
 
         loss = loss_fn(f_x_new, target_class) + lamb * cost
         loss.backward()
@@ -220,4 +224,4 @@ def roar_recourse(
             logging.info("Timeout - ROAR didn't converge")
             break
 
-    return x_new_enc.cpu().detach().numpy() #.squeeze(axis=0)
+    return x_new.cpu().detach().numpy() #.squeeze(axis=0)

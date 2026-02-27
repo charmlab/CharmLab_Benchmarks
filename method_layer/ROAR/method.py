@@ -53,6 +53,7 @@ class ROAR(MethodObject):
         self._discretize = self.config['discretize']
         self._sample = self.config['sample']
         self._lime_seed = self.config['lime_seed']
+        self._enforce_encoding = self.config['enforce_encoding']
         self._seed = self.config['seed']
 
         self._coeffs = coeffs
@@ -130,6 +131,7 @@ class ROAR(MethodObject):
                 t_max_min=self._t_max_min,
                 loss_type=self._loss_type,
                 loss_threshold=self._loss_threshold,
+                enforce_encoding=self._enforce_encoding,
                 seed=self._seed,
             )
             cfs.append(counterfactual)
@@ -171,7 +173,6 @@ class ROAR(MethodObject):
                 factual,
                 self._model.predict_proba,
                 num_features=len(self._data.get_feature_names(expanded=True)),
-                # model_regressor=LogisticRegression()
             )
             intercepts.append(explanations.intercept[1])
 
