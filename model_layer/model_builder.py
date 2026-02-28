@@ -55,12 +55,14 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         # Output layer
         layers.append(nn.Linear(input_size, params['n_outputs']))
 
-        self.network = nn.Sequential(*layers)
-
         if self.activation == 'sigmoid':
             self.output_activation = nn.Sigmoid()
         elif self.activation == 'softmax':
             self.output_activation = nn.Softmax(dim=1)
+
+        layers.append(self.output_activation)  # Add output activation to the end of the network
+
+        self.network = nn.Sequential(*layers)
 
 
     # Predictions
@@ -100,6 +102,7 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         ------
         None.
         """
+        self.train()  # Set the model to training mode
         x_train_tensor = torch.from_numpy(np.array(x_train).astype(np.float32)).to(self.device)
         y_train_tensor = torch.from_numpy(np.array(y_train)).type(torch.LongTensor).to(self.device) 
 
@@ -127,12 +130,12 @@ class PyTorchNeuralNetwork(torch.nn.Module):
                 batch_x = batch_x.to(self.device)
                 batch_y = batch_y.to(self.device)
                 optimizer.zero_grad()
-                outputs = self.forward(batch_x)
+                outputs = self(batch_x)
                 # pass outputs through the output activation function if specified in the config
-                if self.output_activation is not None:
-                    outputs = self.output_activation(outputs)
-                    if self.activation == "softmax" and self.loss_function == 'BCE':
-                        batch_y = F.one_hot(batch_y, num_classes=2) # convert to one-hot encoding for BCE loss
+                # if self.output_activation is not None:
+                #     outputs = self.output_activation(outputs)
+                if self.activation == "softmax" and self.loss_function == 'BCE':
+                    batch_y = F.one_hot(batch_y, num_classes=2) # convert to one-hot encoding for BCE loss
 
                 # print(f"this is the batch_y {batch_y.unsqueeze(1).float()}")
                 # print(f"this is the outputs {outputs}")

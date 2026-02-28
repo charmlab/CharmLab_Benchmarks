@@ -1,5 +1,5 @@
 """
-usage example: python -m experiment --config_path experiment/experiment_config.yml
+usage example: python -m experiment --config_path experiments/experiment_config.yml
 """
 
 import argparse

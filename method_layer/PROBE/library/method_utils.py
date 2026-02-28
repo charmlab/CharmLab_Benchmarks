@@ -41,8 +41,8 @@ def compute_jacobian(inputs, output, num_classes=1):
 def compute_invalidation_rate_closed(torch_model, x, sigma2):
     # Compute input into CDF
     prob = torch_model(x)
-    logit_x = torch.log(prob[0][1] / prob[0][0])
-    Sigma2 = sigma2 * torch.eye(x.shape[0])
+    logit_x = torch.log(prob[0][1] / prob[0][0]).to(x.device) # logit of the positive class probability
+    Sigma2 = sigma2 * torch.eye(x.shape[0]).to(x.device) # covariance matrix of the noise
     jacobian_x = compute_jacobian(x, logit_x, num_classes=1).reshape(-1)
     denom = torch.sqrt(sigma2) * torch.norm(jacobian_x, 2)
     arg = logit_x / denom
@@ -57,24 +57,24 @@ def compute_invalidation_rate_closed(torch_model, x, sigma2):
     return ir
 
 
-def perturb_sample(x, n_samples, sigma2):
-    # stack copies of this sample, i.e. n rows of x.
-    X = x.repeat(n_samples, 1)
-    # sample normal distributed values
-    Sigma = torch.eye(x.shape[1]) * sigma2
-    eps = MultivariateNormal(
-        loc=torch.zeros(x.shape[1]), covariance_matrix=Sigma
-    ).sample((n_samples,))
+# def perturb_sample(x, n_samples, sigma2):
+#     # stack copies of this sample, i.e. n rows of x.
+#     X = x.repeat(n_samples, 1)
+#     # sample normal distributed values
+#     Sigma = torch.eye(x.shape[1]) * sigma2
+#     eps = MultivariateNormal(
+#         loc=torch.zeros(x.shape[1]), covariance_matrix=Sigma
+#     ).sample((n_samples,))
     
-    return X + eps
+#     return X + eps
 
 
 def reparametrization_trick(mu, sigma2, n_samples):
     #var = torch.eye(mu.shape[1]) * sigma2
-    std = torch.sqrt(sigma2)
-    epsilon = MultivariateNormal(loc=torch.zeros(mu.shape[1]), covariance_matrix=torch.eye(mu.shape[1]))
-    epsilon = epsilon.sample((n_samples,))  # standard Gaussian random noise
-    ones = torch.ones_like(epsilon)
+    std = torch.sqrt(sigma2).to(mu.device)
+    epsilon = MultivariateNormal(loc=torch.zeros(mu.shape[0]), covariance_matrix=torch.eye(mu.shape[0]))
+    epsilon = epsilon.sample((n_samples,)).to(mu.device)  # standard Gaussian random noise
+    ones = torch.ones_like(epsilon).to(mu.device)
     random_samples = mu.reshape(-1) * ones + std * epsilon
     
     return random_samples
@@ -120,27 +120,29 @@ def probe_recourse(
 
     x_new = Variable(x.clone(), requires_grad=True)
 
+    # NOTE: x and all its clones are in the shape (1, num_features)
+    # This is based on the original design, ill try to preseve it best I can.
+
     # x_new_enc is a copy of x_new with reconstructed encoding constraints of x_new
     # such that categorical data is either 0 or 1
     # go through the list of categorical features given to us from the
     # data module and use the list of encoded feature names to reconstruct the encoding constraints for the categorical features in x_new
     x_new_enc = x_new.clone()
 
-    for cat_feature_group in cat_feature_indices:
+    # print(f"This is the shape of x_new {x_new}")
+    # print(f"these are the cat feature indices {cat_feature_indices}")
 
-        for index in cat_feature_group:
-                # just round the value to 0 or 1 for the categorical features in x_new_enc
-                # closer to zero gets zero, closer to one gets one
-                x_new_enc[index] = torch.round(x_new_enc[index])
+    for index in cat_feature_indices:
+        x_new_enc[0][index] = torch.round(x_new_enc[0][index])
 
     optimizer = optim.Adam([x_new], lr=lr, amsgrad=True)
 
     if loss_type == "MSE":
         loss_fn = torch.nn.MSELoss()
-        f_x_new = nn.Softmax(model(x_new))[1]
+        f_x_new = model(x_new)[0][1]
     else:
         loss_fn = torch.nn.BCELoss()
-        f_x_new = model(x_new)[:, 1]
+        f_x_new = model(x_new)[0][1]
 
     t0 = datetime.datetime.now()
     t_max = datetime.timedelta(minutes=t_max_min)
@@ -157,7 +159,7 @@ def probe_recourse(
 
             optimizer.zero_grad()
 
-            f_x_new_binary = model(x_new).squeeze(0)
+            f_x_new_binary = model(x_new)[0]
 
             cost = torch.dist(x_new, x, norm)
 
@@ -179,12 +181,10 @@ def probe_recourse(
 
             x_new_enc = x_new.clone()
 
-            for cat_feature_group in cat_feature_indices:
+            for index in cat_feature_indices:
+                x_new_enc[0][index] = torch.round(x_new_enc[0][index])
 
-                for index in cat_feature_group:
-                    x_new_enc[index] = torch.round(x_new_enc[index])
-
-            f_x_new = model(x_new)[:, 1]
+            f_x_new = model(x_new)[0][1]
         
         if (f_x_new > DECISION_THRESHOLD) and (invalidation_rate < invalidation_target + inval_target_eps):
             

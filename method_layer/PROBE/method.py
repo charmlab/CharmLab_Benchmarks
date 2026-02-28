@@ -70,7 +70,7 @@ class PROBE(MethodObject):
         for features in encoded_feature_names:
             # Find the indices of these encoded features in the processed dataframe
             indices = [factuals.columns.get_loc(feat) for feat in features]
-            cat_features_indices.append(indices)
+            cat_features_indices.extend(indices)
 
         # So cat_features_indices should look something like [[3,4,5,6]] for the german dataset, 
         # which means the 4 one-hot encoded features of "personal_status_sex" are at those positions 
@@ -79,10 +79,10 @@ class PROBE(MethodObject):
 
         cfs = []
         for index, row in factuals.iterrows():
-
+            
             counterfactual = probe_recourse(
                 self._model._model,
-                row.to_numpy(), #.reshape((1, -1)),
+                row.to_numpy().reshape((1, -1)),
                 cat_features_indices,
                 # binary_cat_features=self._binary_cat_features,
                 feature_costs=self._feature_cost,
