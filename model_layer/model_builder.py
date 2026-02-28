@@ -40,7 +40,7 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         self.learning_rate = params['learning_rate']
         self.optimizer = params['optimizer']
         self.loss_function = params['loss_function']
-        self.output_activation = params.get('output_activation', None)
+        self.activation = params.get('output_activation', None)
         self.device = params['device']
 
         # Dynamically build the hidden layers based on the provided configuration
@@ -57,9 +57,9 @@ class PyTorchNeuralNetwork(torch.nn.Module):
 
         self.network = nn.Sequential(*layers)
 
-        if self.output_activation == 'sigmoid':
+        if self.activation == 'sigmoid':
             self.output_activation = nn.Sigmoid()
-        elif self.output_activation == 'softmax':
+        elif self.activation == 'softmax':
             self.output_activation = nn.Softmax(dim=1)
 
 
@@ -113,6 +113,8 @@ class PyTorchNeuralNetwork(torch.nn.Module):
             optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
         elif self.optimizer == 'sgd':
             optimizer = optim.SGD(self.network.parameters(), lr=self.learning_rate)
+        elif self.optimizer == "rms":
+            optimizer = optim.RMSprop(self.network.parameters(), lr=self.learning_rate)
         
         # defining loss function
         if self.loss_function == 'BCE':
@@ -129,8 +131,17 @@ class PyTorchNeuralNetwork(torch.nn.Module):
                 # pass outputs through the output activation function if specified in the config
                 if self.output_activation is not None:
                     outputs = self.output_activation(outputs)
+                    if self.activation == "softmax" and self.loss_function == 'BCE':
+                        batch_y = F.one_hot(batch_y, num_classes=2) # convert to one-hot encoding for BCE loss
 
-                loss = criterion(outputs, batch_y.unsqueeze(1).float())
+                # print(f"this is the batch_y {batch_y.unsqueeze(1).float()}")
+                # print(f"this is the outputs {outputs}")
+                if self.loss_function == 'BCE' and self.activation == "softmax":
+                    loss = criterion(outputs, batch_y.float())
+                elif self.loss_function == 'BCE' and self.activation == "sigmoid":
+                    loss = criterion(outputs, batch_y.unsqueeze(1).float())
+                else:
+                    loss = criterion(outputs, batch_y.float())
                 loss.backward()
                 optimizer.step()
 

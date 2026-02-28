@@ -186,7 +186,6 @@ class DataObject:
         """
         if self._config['preprocessing_strategy'] == 'normalize':
             # NOTE: needs to be implemented
-            #scaler = normalize()
             raise NotImplementedError("Normalization strategy is not yet implemented.")
         elif self._config['preprocessing_strategy'] == 'standardize':
             scaler = StandardScaler()

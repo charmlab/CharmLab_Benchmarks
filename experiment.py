@@ -15,15 +15,18 @@ from evaluation_layer.evaluation_factory import create_evaluations
 
 # Force registration of all methods and evaluations
 import method_layer.ROAR.method  # noqa: F401
+import method_layer.PROBE.method  # noqa: F401
 import evaluation_layer.distances  # noqa: F401
 
 _DATA_RAW_PATH = {
     "german": "data_layer/raw_csv/german.csv",
+    "compas_carla": "data_layer/raw_csv/compas_carla.csv",
     # add more datasets and their raw data paths here
 }
 
 _DATA_CONFIG_PATHS = {
     "german": "data_layer/config_files/data_config_german.yml",
+    "compas_carla": "data_layer/config_files/data_config_compas_carla.yml",
     # add more datasets and their config paths here
 }
 
@@ -34,6 +37,7 @@ _MODEL_CONFIG_PATHS = {
 
 _METHOD_CONFIG_PATHS = {
     "ROAR": "method_layer/ROAR/library/method_config.yml",
+    "PROBE": "method_layer/PROBE/library/method_config.yml",
     # add more method types and their config paths here
 }
 

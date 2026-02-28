@@ -176,20 +176,11 @@ def roar_recourse(
             # data module and use the list of encoded feature names to reconstruct the encoding constraints for the categorical features in x_new
             x_new_enc = x_new.clone()
 
-            # NOTE: This reconstruction isn't done in original code during CFX search!
-            # Could this lead to results not aligned with the paper?
             for cat_feature_group in cat_feature_indices:
-                # We can reconstruct the encoding constraints by taking the argmax of the group of features to find the index of the feature that should be 1 (if any), and setting that feature to 1 and the rest to 0.
-                # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}")
-                
-                max_index = torch.argmax(x_new_enc[cat_feature_group[0]:cat_feature_group[-1]+1]).item() + cat_feature_group[0] # find the index of the maximum value in the group of features corresponding to the categorical feature
-                
-                # print(f"Reconstructing encoding constraints for categorical feature group {cat_feature_group}, max index: {max_index}")
+
                 for index in cat_feature_group:
-                    if index != max_index:
-                        x_new_enc[index] = 0
-                    else:
-                        x_new_enc[index] = 1
+                    x_new_enc[index] = torch.round(x_new_enc[index])
+                    
 
         # Calculate max delta perturbation on weights
         delta_W, delta_W0 = _calc_max_perturbation(
