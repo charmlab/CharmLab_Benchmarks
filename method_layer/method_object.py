@@ -1,20 +1,21 @@
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
-from data_layer.data_module import DataModule
-from model_layer.model_module import ModelModule
+from data_layer.data_object import DataObject
+from model_layer.model_object import ModelObject
 
 
-class MethodModule(ABC):
+class MethodObject(ABC):
     """
     Abstract class to implement custom recourse methods for a given black-box-model.
 
     Parameters
     ----------
-    data: data_layer.DataModule
-        The data module containing the processed data and metadata.
-    model: model_layer.ModelModule
+    data: data_layer.DataObject
+        The data object containing the processed data and metadata.
+    model: model_layer.ModelObject
         The model module containing the trained model and its configuration.
 
     Methods
@@ -24,9 +25,10 @@ class MethodModule(ABC):
    
     """
 
-    def __init__(self, data: DataModule, model: ModelModule):
+    def __init__(self, data: DataObject, model: ModelObject, config_override: Optional[Dict[str, Any]] = None):
         self._data = data
         self._model = model
+        self._config_override = config_override
 
     @abstractmethod
     def get_counterfactuals(self, factuals: pd.DataFrame):

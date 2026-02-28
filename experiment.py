@@ -1,55 +1,158 @@
-# generic example of a full end to end run of the repo
-from data_layer.data_module import DataModule
-from evaluation_layer.distances import Distance
-from model_layer.model_module import ModelModule
-from method_layer.ROAR.method import ROAR
-import numpy as np
+"""
+usage example: python -m experiment --config_path experiments/experiment_config.yml
+"""
+
+import argparse
 import pandas as pd
+import numpy as np
+import logging
 
-if __name__ == "__main__":
+from config_utils import load_yaml, resolve_layer_config
+from data_layer.data_object import DataObject
+from model_layer.model_object import ModelObject
+from method_layer.method_factory import create_method
+from evaluation_layer.evaluation_factory import create_evaluations
 
-    data_module = DataModule(
-        data_path="data_layer/raw_csv/german.csv",
-        config_path="data_layer/config_files/data_config_german.yml")
-    
-    print("here is the processed data:")
-    print(data_module.get_processed_data().head())
+# Force registration of all methods and evaluations
+import method_layer.ROAR.method  # noqa: F401
+import method_layer.PROBE.method  # noqa: F401
+import evaluation_layer.distances  # noqa: F401
 
-    model_module = ModelModule(
-        config_path="model_layer/model_config_mlp.yml",
-        data_module=data_module
+_DATA_RAW_PATH = {
+    "german": "data_layer/raw_csv/german.csv",
+    "compas_carla": "data_layer/raw_csv/compas_carla.csv",
+    # add more datasets and their raw data paths here
+}
+
+_DATA_CONFIG_PATHS = {
+    "german": "data_layer/config_files/data_config_german.yml",
+    "compas_carla": "data_layer/config_files/data_config_compas_carla.yml",
+    # add more datasets and their config paths here
+}
+
+_MODEL_CONFIG_PATHS = {
+    "mlp": "model_layer/model_config_mlp.yml",
+    # add more model types and their config paths here
+}
+
+_METHOD_CONFIG_PATHS = {
+    "ROAR": "method_layer/ROAR/library/method_config.yml",
+    "PROBE": "method_layer/PROBE/library/method_config.yml",
+    # add more method types and their config paths here
+}
+
+
+def setup_logging(name: str):
+    level = getattr(logging, name.upper(), logging.INFO)
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     )
 
-    # get model accuracy
-    train_accuracy = model_module.get_train_accuracy()
-    print(f"Model training accuracy: {train_accuracy}")
-    accuracy = model_module.get_test_accuracy()
-    print(f"Model test accuracy: {accuracy}")
 
-    # test to see if ROAR method runs without error
-    method = ROAR(data_module, model_module)
+def select_factuals(model: ModelObject, data: DataObject, X_test, config) -> pd.DataFrame:
+    num_factuals = config.get("num_factuals", 5)
+    factual_selection = config.get("factual_selection", "negative_class")
 
-    # get some factuals to generate counterfactuals for
-    X_test, y_test = model_module.get_test_data()
+    if factual_selection == "negative_class":
+        prediction = model.predict(X_test)
+        neg_indices = np.where(prediction == 0)[0] # returns the indices
+        selected = X_test[neg_indices][:num_factuals]
+    elif factual_selection == "all":
+        prediction = model.predict(X_test)
+        neg_indices = np.where(prediction == 0)[0] # returns the indices
+        selected = X_test[neg_indices]
+    else:
+        raise ValueError(f"Unknown factual selection method {factual_selection}")
+    
+    return pd.DataFrame(selected, columns=data.get_feature_names(expanded=True))
 
-    # get the first 5 rows of the processed test data as factuals
-    # specifically, we can the ones predicted as the negative class (label 0) 
-    predictions = model_module.predict(X_test)
-    negative_class_indices = np.where(predictions == 0)[0]
 
-    factuals = pd.DataFrame(X_test[negative_class_indices][:5], columns=data_module.get_feature_names(expanded=True))
+def run_experiment(config_path: str):
+    # load the top level experiment yaml
 
-    print("Here are the factuals we will generate counterfactuals for:")
-    print(factuals)
+    exp_config = load_yaml(config_path)
+    experiment = exp_config["experiment"]
 
-    # now generate counterfactuals for these factuals using ROAR
-    counterfactuals = method.get_counterfactuals(factuals)
-    print("Here are the generated counterfactuals:")
-    print(counterfactuals)
+    setup_logging(experiment.get("logger", "INFO"))
 
-    # perform some benchmarking of the method using the evaluation module
-    evaluation_module = Distance(data_module)
+    logger = logging.getLogger("experiment")
 
-    evaluation_results = evaluation_module.get_evaluation(factuals, counterfactuals)
-    print("Here are the evaluation results for the generated counterfactuals:")
-    print(evaluation_results)
+    logger.info(f"Running experiment {experiment['name']}")
+
+    # ---------- Data layer loading and config merging -----------
+    data_section = exp_config["data"]
+    data_config_merged = resolve_layer_config(
+        _DATA_CONFIG_PATHS[data_section["name"]],
+        data_section.get("overrides")    
+    )
+
+    data_object = DataObject(
+        data_path=_DATA_RAW_PATH[data_section["name"]],
+        config_override=data_config_merged
+    )
+
+    logger.info("Data layer loaded and configured.")
+
+    # ---------- Model layer loading and config merging -----------
+    model_section = exp_config["model"]
+    model_config_merged = resolve_layer_config(
+        _MODEL_CONFIG_PATHS[model_section["name"]],
+        model_section.get("overrides")
+    )
+
+    model_object = ModelObject(
+        data_object=data_object,
+        config_override=model_config_merged
+    )
+
+    logger.info(f"Train accuracy: {model_object.get_train_accuracy():.4f}")
+    logger.info(f"Test accuracy:  {model_object.get_test_accuracy():.4f}")
+
+    # ---------- Select factuals for counterfactual generation -----------
+    X_test, y_test = model_object.get_test_data()
+    factuals = select_factuals(model_object, data_object, X_test, experiment)
+    logger.info(f"Selected {len(factuals)} factual instances.")
+
+    # ---------- Method layer loading and config merging -----------
+    method_section = exp_config["method"]
+    method_config_merged = resolve_layer_config(
+        _METHOD_CONFIG_PATHS[method_section["name"]],
+        method_section.get("overrides")
+    )
+
+    method_object = create_method(
+        name=method_section["name"],
+        model=model_object,
+        data=data_object,
+        config_override=method_config_merged
+    )
+
+    counterfactuals = method_object.get_counterfactuals(factuals)
+    logger.info(f"Generated counterfactuals for {len(counterfactuals)} factual instances.")
+
+    # ---------- Evaluation layer loading and config merging -----------
+    evaluation_section = exp_config["evaluation"]
+    evaluations = create_evaluations(
+        metrics_config=evaluation_section["metrics"],
+        data=data_object
+    )
+
+    results = []
+    for eval_module in evaluations:
+        eval_result = eval_module.get_evaluation(factuals, counterfactuals)
+        results.append(eval_result)
+        logger.info(f"Evaluation {eval_module.__class__.__name__} results: {eval_result}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run a counterfactual explanation experiment.")
+    parser.add_argument(
+        "--config_path", 
+        type=str, 
+        required=True, 
+        help="Path to the experiment config YAML file.")
+    args = parser.parse_args()
+
+    run_experiment(args.config_path)
+
