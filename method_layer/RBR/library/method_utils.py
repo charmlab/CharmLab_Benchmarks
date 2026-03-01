@@ -394,7 +394,7 @@ def rbr_recourse(
         lambdas = torch.linspace(0, 1, 100, device=device)
         for lam in lambdas:
             x_b = (1 - lam) * x0_t + lam * x_c
-            label = make_prediction(x_b)
+            label = make_prediction(x_b).to(device)
             if label == 1 - x_label:
                 curdist = dist(x0_t, x_b)
                 if curdist < best_dist:

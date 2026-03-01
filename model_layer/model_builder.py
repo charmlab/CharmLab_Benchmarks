@@ -46,14 +46,17 @@ class PyTorchNeuralNetwork(torch.nn.Module):
         # Dynamically build the hidden layers based on the provided configuration
         layers = []
         input_size = params['n_inputs']
+        layers.append(nn.Linear(input_size, params['layers'][0][0]))  # First hidden layer
+        layers.append(nn.ReLU())  # Using ReLU activation for hidden layers
+
         for layer_config in params['layers']:
-            output_size = layer_config[0]
+            input_size = layer_config[0]
+            output_size = layer_config[1]
             layers.append(nn.Linear(input_size, output_size))
             layers.append(nn.ReLU())  # Using ReLU activation for hidden layers
-            input_size = output_size
 
         # Output layer
-        layers.append(nn.Linear(input_size, params['n_outputs']))
+        layers.append(nn.Linear(output_size, params['n_outputs']))
 
         if self.activation == 'sigmoid':
             self.output_activation = nn.Sigmoid()

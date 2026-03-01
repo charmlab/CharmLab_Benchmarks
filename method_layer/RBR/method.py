@@ -7,11 +7,12 @@ from config_utils import deep_merge
 from data_layer.data_object import DataObject
 from evaluation_layer.utils import check_counterfactuals
 from method_layer.RBR.library.method_utils import rbr_recourse
+from method_layer.method_factory import register_method
 from model_layer.model_object import ModelObject
 from method_layer.method_object import MethodObject
 import pandas as pd
 
-
+@register_method("RBR")
 class RBR(MethodObject):
     """
     Implementation of Robust Bayesian Recourse [1]_.
@@ -35,7 +36,7 @@ class RBR(MethodObject):
         # store the feature ordering
         self._feature_order = self._data.get_feature_names(expanded=True)
 
-        self._nnum_samples = self.config["num_samples"]
+        self._num_samples = self.config["num_samples"]
         self._perturb_radius = self.config["perturb_radius"]
         self._delta_plus = self.config["delta_plus"]
         self._sigma = self.config["sigma"]
@@ -58,6 +59,8 @@ class RBR(MethodObject):
             indices = [factuals.columns.get_loc(feat) for feat in features]
             cat_features_indices.extend(indices)
 
+        x_train, y_train = self._model.get_train_data()
+
         cfs = []
 
         for idx, row in factuals.iterrows():
@@ -66,7 +69,8 @@ class RBR(MethodObject):
                 row.to_numpy().reshape(1, -1), # reshape to 2D array for the model input
                 self._model,
                 cat_features_indices=cat_features_indices,
-                nnum_samples=self._nnum_samples,
+                train_data=x_train,
+                num_samples=self._num_samples,
                 perturb_radius=self._perturb_radius,
                 delta_plus=self._delta_plus,
                 sigma=self._sigma,
