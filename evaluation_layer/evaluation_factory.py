@@ -2,6 +2,8 @@ from data_layer.data_object import DataObject
 from evaluation_layer.evaluation_object import EvaluationObject
 from typing import Dict, Any, List, Optional
 
+from model_layer.model_object import ModelObject
+
 _EVAL_REGISTRY = {}
 
 
@@ -14,14 +16,15 @@ def register_evaluation(name: str):
 
 
 def create_evaluations(metrics_config: List[Dict[str, Any]], 
-                       data: DataObject) -> List[EvaluationObject]:
+                       data: DataObject,
+                       model: ModelObject) -> List[EvaluationObject]:
     """
     Instantiate all requested evaluation modules from the experiment config.
     
     Args:
         metrics_config: List of dicts, each with "name" and optional "hyperparameters".
         data: The DataObject instance.
-    
+        model: The ModelObject instance.
     Returns:
         List of EvaluationObject instances.
     """
@@ -33,5 +36,5 @@ def create_evaluations(metrics_config: List[Dict[str, Any]],
             raise ValueError(
                 f"Evaluation '{name}' is not registered. Available: {list(_EVAL_REGISTRY.keys())}"
             )
-        evaluations.append(_EVAL_REGISTRY[name](data, hyperparams))
+        evaluations.append(_EVAL_REGISTRY[name](data, model, hyperparams))
     return evaluations

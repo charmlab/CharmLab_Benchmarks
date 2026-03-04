@@ -7,6 +7,7 @@ from evaluation_layer.evaluation_factory import register_evaluation
 from evaluation_layer.evaluation_object import EvaluationObject
 from evaluation_layer.utils import remove_nans
 from data_layer.data_object import DataObject
+from model_layer.model_object import ModelObject
 
 
 def l0_distance(delta: np.ndarray) -> List[float]:
@@ -153,8 +154,8 @@ class Distance(EvaluationObject):
     Calculates the L0, L1, L2, and L-infty distance measures.
     """
 
-    def __init__(self, data: DataObject, hyperparameters: dict = None):
-        super().__init__(data, hyperparameters)
+    def __init__(self, data: DataObject, model: ModelObject, hyperparameters: dict = None):
+        super().__init__(data, model, hyperparameters)
         self.columns = ["L0_distance", "L1_distance", "L2_distance", "Linf_distance"]
 
     def get_evaluation(self, factuals, counterfactuals):

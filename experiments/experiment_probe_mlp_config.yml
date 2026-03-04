@@ -16,13 +16,13 @@ experiment:
 
 # ---------- Data Layer ----------
 data:
-  name: "compas_carla"
+  - name: "compas_carla"
   # Override any key inside the data config without editing it directly.
   # Keys here are merged ON TOP of whatever is in data_config_<name>.yml.
-  overrides:
-    train_split: 0.8
-    balance_classes: false
-    preprocessing_strategy: "standardize"
+    overrides:
+      train_split: 0.8
+      balance_classes: false
+      preprocessing_strategy: "standardize"
 
 # ---------- Model Layer ----------
 model:

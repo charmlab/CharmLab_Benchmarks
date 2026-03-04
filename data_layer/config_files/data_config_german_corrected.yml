@@ -3,7 +3,7 @@
 # benefits of this approach:
 #   - easier to maintain and update for each dataset
 #   - we can add as much information, and use it if necessary.
-name: "german"
+name: "german_corrected"
 target_column: "credit_risk"
 train_split: 0.7
 balance_classes: false

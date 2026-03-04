@@ -20,15 +20,18 @@ import method_layer.RBR.method  # noqa: F401
 import method_layer.LARR.method  # noqa: F401
 import method_layer.WACHTER.method  # noqa: F401
 import evaluation_layer.distances  # noqa: F401
+import evaluation_layer.validity  # noqa: F401
 
 _DATA_RAW_PATH = {
     "german": "data_layer/raw_csv/german.csv",
+    "german_corrected": "data_layer/raw_csv/german_corrected.csv",
     "compas_carla": "data_layer/raw_csv/compas_carla.csv",
     # add more datasets and their raw data paths here
 }
 
 _DATA_CONFIG_PATHS = {
     "german": "data_layer/config_files/data_config_german.yml",
+    "german_corrected": "data_layer/config_files/data_config_german_corrected.yml",
     "compas_carla": "data_layer/config_files/data_config_compas_carla.yml",
     # add more datasets and their config paths here
 }
@@ -88,36 +91,49 @@ def run_experiment(config_path: str):
 
     # ---------- Data layer loading and config merging -----------
     data_section = exp_config["data"]
-    data_config_merged = resolve_layer_config(
-        _DATA_CONFIG_PATHS[data_section["name"]],
-        data_section.get("overrides")    
-    )
+    # expand this below to be a list of multiple congifig paths and data objects.
+    # this is useful mostly for the evaluation layer, where some metrics might require multiple datasets (e.g. future validity).
+    data_configs_merged = []
+    for data in data_section:
+        data_configs_merged.append(resolve_layer_config(
+            _DATA_CONFIG_PATHS[data["name"]],
+            data.get("overrides")
+        ))
 
-    data_object = DataObject(
-        data_path=_DATA_RAW_PATH[data_section["name"]],
-        config_override=data_config_merged
-    )
+    data_objects = []
+    for i, data in enumerate(data_section):
+        data_objects.append(DataObject(
+            data_path=_DATA_RAW_PATH[data["name"]],
+            config_override=data_configs_merged[i]
+        ))
 
     logger.info("Data layer loaded and configured.")
 
     # ---------- Model layer loading and config merging -----------
+    # If we had multiple data objects, then we should create a
+    # model object for each of them. The individual models will have the same structure
+    # but trained on different data (useful for future validity).
     model_section = exp_config["model"]
     model_config_merged = resolve_layer_config(
         _MODEL_CONFIG_PATHS[model_section["name"]],
         model_section.get("overrides")
     )
 
-    model_object = ModelObject(
-        data_object=data_object,
-        config_override=model_config_merged
-    )
-
-    logger.info(f"Train accuracy: {model_object.get_train_accuracy():.4f}")
-    logger.info(f"Test accuracy:  {model_object.get_test_accuracy():.4f}")
+    model_objects = []
+    for data_obj in data_objects:
+        model_objects.append(ModelObject(
+            data_object=data_obj,
+            config_override=model_config_merged
+        ))
+   
+    # we make the assumtion that the first model is the main one used to 
+    # help generate counterfactuals.
+    logger.info(f"Train accuracy: {model_objects[0].get_train_accuracy():.4f}")
+    logger.info(f"Test accuracy:  {model_objects[0].get_test_accuracy():.4f}")
 
     # ---------- Select factuals for counterfactual generation -----------
-    X_test, y_test = model_object.get_test_data()
-    factuals = select_factuals(model_object, data_object, X_test, experiment)
+    X_test, y_test = model_objects[0].get_test_data()
+    factuals = select_factuals(model_objects[0], data_objects[0], X_test, experiment)
     factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 
@@ -130,8 +146,8 @@ def run_experiment(config_path: str):
 
     method_object = create_method(
         name=method_section["name"],
-        model=model_object,
-        data=data_object,
+        model=model_objects[0],  # Assuming the first model object is used for the method
+        data=data_objects[0],  # Assuming the first data object is used for the method
         config_override=method_config_merged
     )
 
@@ -140,9 +156,11 @@ def run_experiment(config_path: str):
 
     # ---------- Evaluation layer loading and config merging -----------
     evaluation_section = exp_config["evaluation"]
+
     evaluations = create_evaluations(
         metrics_config=evaluation_section["metrics"],
-        data=data_object
+        data=data_objects[0],  # Assuming the first data object is used for evaluation
+        model=model_objects[-1]  # Assuming the last model object is used for evaluation - specifically for future validity.
     )
 
     results = []
