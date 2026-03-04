@@ -1,5 +1,5 @@
 """
-usage example: python -m experiment --config_path experiments/experiment_config.yml
+usage example: python -m experiment --config_path experiments/standard/experiment_config.yml
 """
 
 import argparse
@@ -8,45 +8,46 @@ import numpy as np
 import logging
 
 from config_utils import load_yaml, resolve_layer_config
-from data_layer.data_object import DataObject
-from model_layer.model_object import ModelObject
-from method_layer.method_factory import create_method
-from evaluation_layer.evaluation_factory import create_evaluations
+from data.data_object import DataObject
+from model.catalog.mlp.mlp_builder import PyTorchNeuralNetwork
+from model.model_object import ModelObject
+from method.method_factory import create_method
+from evaluation.evaluation_factory import create_evaluations
 
 # Force registration of all methods and evaluations
-import method_layer.ROAR.method  # noqa: F401
-import method_layer.PROBE.method  # noqa: F401
-import method_layer.RBR.method  # noqa: F401
-import method_layer.LARR.method  # noqa: F401
-import method_layer.WACHTER.method  # noqa: F401
-import evaluation_layer.distances  # noqa: F401
-import evaluation_layer.validity  # noqa: F401
+import method.catalog.ROAR.method  # noqa: F401
+import method.catalog.PROBE.method  # noqa: F401
+import method.catalog.RBR.method  # noqa: F401
+import method.catalog.LARR.method  # noqa: F401
+import method.catalog.WACHTER.method  # noqa: F401
+import evaluation.catalog.distances  # noqa: F401
+import evaluation.catalog.validity  # noqa: F401
 
 _DATA_RAW_PATH = {
-    "german": "data_layer/raw_csv/german.csv",
-    "german_corrected": "data_layer/raw_csv/german_corrected.csv",
-    "compas_carla": "data_layer/raw_csv/compas_carla.csv",
+    "german": "data/catalog/german/german.csv",
+    "german_corrected": "data/catalog/german_corrected/german_corrected.csv",
+    "compas_carla": "data/catalog/compas/compas_carla.csv",
     # add more datasets and their raw data paths here
 }
 
 _DATA_CONFIG_PATHS = {
-    "german": "data_layer/config_files/data_config_german.yml",
-    "german_corrected": "data_layer/config_files/data_config_german_corrected.yml",
-    "compas_carla": "data_layer/config_files/data_config_compas_carla.yml",
+    "german": "data/catalog/german/data_config_german.yml",
+    "german_corrected": "data/catalog/german_corrected/data_config_german_corrected.yml",
+    "compas_carla": "data/catalog/compas/data_config_compas_carla.yml",
     # add more datasets and their config paths here
 }
 
 _MODEL_CONFIG_PATHS = {
-    "mlp": "model_layer/model_config_mlp.yml",
+    "mlp": "model/catalog/mlp/model_config_mlp.yml",
     # add more model types and their config paths here
 }
 
 _METHOD_CONFIG_PATHS = {
-    "ROAR": "method_layer/ROAR/library/method_config.yml",
-    "PROBE": "method_layer/PROBE/library/method_config.yml",
-    "RBR": "method_layer/RBR/library/method_config.yml",
-    "LARR": "method_layer/LARR/library/method_config.yml",
-    "WACHTER": "method_layer/WACHTER/library/method_config.yml",
+    "ROAR": "method/catalog/ROAR/library/method_config.yml",
+    "PROBE": "method/catalog/PROBE/library/method_config.yml",
+    "RBR": "method/catalog/RBR/library/method_config.yml",
+    "LARR": "method/catalog/LARR/library/method_config.yml",
+    "WACHTER": "method/catalog/WACHTER/library/method_config.yml",
     # add more method types and their config paths here
 }
 
@@ -121,11 +122,16 @@ def run_experiment(config_path: str):
 
     model_objects = []
     for data_obj in data_objects:
-        model_objects.append(ModelObject(
-            data_object=data_obj,
-            config_override=model_config_merged
-        ))
-   
+        # Since we likely wont have too many different kinds of models,
+        # I wont make use of a factory pattern, just use a simple loop and if statements.
+        if model_section["name"] == "mlp":
+            model_objects.append(PyTorchNeuralNetwork(
+                data_object=data_obj,
+                config_override=model_config_merged
+            ))
+        else:
+            raise ValueError(f"Unknown model type {model_section['name']}")
+
     # we make the assumtion that the first model is the main one used to 
     # help generate counterfactuals.
     logger.info(f"Train accuracy: {model_objects[0].get_train_accuracy():.4f}")

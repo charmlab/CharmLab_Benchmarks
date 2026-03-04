@@ -1,22 +1,22 @@
 # generic example of a full end to end run of the repo
-from data_layer.data_object import DataObject
-from evaluation_layer.distances import Distance
-from model_layer.model_object import ModelObject
-from method_layer.ROAR.method import ROAR
+from data.data_object import DataObject
+from evaluation.catalog.distances import Distance
+from model.model_object import ModelObject
+from method.catalog.ROAR.method import ROAR
 import numpy as np
 import pandas as pd
 
 if __name__ == "__main__":
 
     data_object = DataObject(
-        data_path="data_layer/raw_csv/german.csv",
-        config_path="data_layer/config_files/data_config_german.yml")
+        data_path="data/raw_csv/german.csv",
+        config_path="data/config_files/data_config_german.yml")
     
     print("here is the processed data:")
     print(data_object.get_processed_data().head())
 
     model_module = ModelObject(
-        config_path="model_layer/model_config_mlp.yml",
+        config_path="model/model_config_mlp.yml",
         data_object=data_object
     )
 
