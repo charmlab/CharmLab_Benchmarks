@@ -43,11 +43,11 @@ _MODEL_CONFIG_PATHS = {
 }
 
 _METHOD_CONFIG_PATHS = {
-    "ROAR": "method/catalog/ROAR/library/method_config.yml",
-    "PROBE": "method/catalog/PROBE/library/method_config.yml",
-    "RBR": "method/catalog/RBR/library/method_config.yml",
-    "LARR": "method/catalog/LARR/library/method_config.yml",
-    "WACHTER": "method/catalog/WACHTER/library/method_config.yml",
+    "ROAR": "method/catalog/ROAR/library/config.yml",
+    "PROBE": "method/catalog/PROBE/library/config.yml",
+    "RBR": "method/catalog/RBR/library/config.yml",
+    "LARR": "method/catalog/LARR/library/config.yml",
+    "WACHTER": "method/catalog/WACHTER/library/config.yml",
     # add more method types and their config paths here
 }
 

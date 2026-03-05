@@ -31,7 +31,7 @@ class ROAR(MethodObject):
         super().__init__(data, model, config_override=config_override)
 
         # get configs from config file
-        self.config = yaml.safe_load(open("method/catalog/ROAR/library/method_config.yml", 'r'))
+        self.config = yaml.safe_load(open("method/catalog/ROAR/library/config.yml", 'r'))
         
         # merge configs with user specified, if they exist
         if self._config_override is not None:

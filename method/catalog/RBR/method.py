@@ -28,7 +28,7 @@ class RBR(MethodObject):
         super().__init__(data, model, config_override)
 
         # get configs from config file
-        self.config = yaml.safe_load(open("method/catalog/RBR/library/method_config.yml", 'r'))
+        self.config = yaml.safe_load(open("method/catalog/RBR/library/config.yml", 'r'))
 
         if self._config_override is not None:
             self.config = deep_merge(self.config, self._config_override)
