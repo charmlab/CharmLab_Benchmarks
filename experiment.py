@@ -134,8 +134,14 @@ def run_experiment(config_path: str):
 
     # we make the assumtion that the first model is the main one used to 
     # help generate counterfactuals.
-    logger.info(f"Train accuracy: {model_objects[0].get_train_accuracy():.4f}")
-    logger.info(f"Test accuracy:  {model_objects[0].get_test_accuracy():.4f}")
+    # logger.info(f"Train accuracy M1: {model_objects[0].get_train_accuracy():.4f}")
+    logger.info(f"Test accuracy M1:  {model_objects[0].get_test_accuracy():.4f}")
+    logger.info(f"Test AUC M1:  {model_objects[0].get_auc():.4f}")
+
+    if len(model_objects) > 1:
+        # logger.info(f"Train accuracy M2: {model_objects[1].get_train_accuracy():.4f}")
+        logger.info(f"Test accuracy M2:  {model_objects[1].get_test_accuracy():.4f}")
+        logger.info(f"Test AUC M2:  {model_objects[1].get_auc():.4f}")
 
     # ---------- Select factuals for counterfactual generation -----------
     X_test, y_test = model_objects[0].get_test_data()

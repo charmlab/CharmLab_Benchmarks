@@ -89,7 +89,7 @@ class ROAR(MethodObject):
                raise ValueError("Depreciated support for linear, experiment with mlp instead. If you want to use linear, please provide coefficients and intercepts in the correct shape.")
             elif self._model._config["architecture"] == "mlp":
                 logging.info("Start generating LIME coefficients")
-                coeffs, intercepts = self._get_lime_coefficients(factuals)
+                # coeffs, intercepts = self._get_lime_coefficients(factuals)
                 logging.info("Finished generating LIME coefficients")
             else:
                 raise ValueError(
@@ -110,10 +110,12 @@ class ROAR(MethodObject):
                 axis=1
             )
 
+        lime_data = self._model.get_train_data()[0]
+
         cfs = []
         for index, row in factuals.iterrows():
-            coeff = coeffs[index]
-            intercept = intercepts[index]
+            if coeffs is None and intercepts is None:
+                coeff, intercept = self._get_lime_coefficients(lime_data, row.to_numpy())
 
             counterfactual = roar_recourse(
                 row.to_numpy().reshape((1, -1)),
@@ -144,44 +146,35 @@ class ROAR(MethodObject):
 
         return df_cfs
 
-    def _get_lime_coefficients(self, factuals: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+    def _get_lime_coefficients(self, lime_data: np.ndarray, factual: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         ROAR Recourse is only defined on linear models. To make it work for arbitrary non-linear networks
         we need to find the lime coefficients for every instance.
         """
         np.random.seed(self._lime_seed)
 
-        coeffs = np.zeros(factuals.shape)
-        intercepts = []
-        lime_data = self._model.get_train_data()[0] # get the training data features from the model module, which should already be in the correct feature order and format for the model input
-        lime_label = self._model.get_train_data()[1] # get the training data labels from the model module
+        # coeffs = np.zeros(factuals.shape)
+        # intercepts = []
 
         lime_exp = LimeTabularExplainer(
             training_data = lime_data,
-            # training_labels = lime_label,
-            # feature_names = self._data.get_feature_names(expanded=True), # ensure the feature ordering is correct for lime explainer
             discretize_continuous = False,
-            # sample_around_instance = self._sample,
-            # categorical_names = self._data.get_categorical_features(expanded=True),
             feature_selection="none", 
             # self._data.encoded_normalized's categorical features contain feature name and value, separated by '_'
             # while self._data.categorical do not contain those additional values.
         )
 
-        for index, row in factuals.iterrows():
-            factual = row.values
+        # for index, row in factuals.iterrows():
+            # factual = row.values
             # print(f"These are the predicted values for the factual instance before passing to lime {self._model.predict_proba(factual)}")
-            explanations = lime_exp.explain_instance(
-                factual,
-                self._model.predict_both_classes, # little misleading from the original, but these predictions have to be labels like [0,1] for positive and [1, 0] for negative.
-                num_features=len(self._data.get_feature_names(expanded=True)),
-                model_regressor=LogisticRegression() 
-            )
-            intercepts.append(explanations.intercept[1])
-            coefficients = explanations.local_exp[1][0][1]
-            coeffs[index] = coefficients
+        explanations = lime_exp.explain_instance(
+            factual,
+            self._model.predict_both_classes, # little misleading from the original, but these predictions have to be labels like [0,1] for positive and [1, 0] for negative.
+            num_features=lime_data.shape[1],
+            model_regressor=LogisticRegression() 
+        )
+        intercepts = explanations.intercept[1]
+        coefficients = explanations.local_exp[1][0][1]
+        # coeffs[index] = coefficients
 
-            #for tpl in explanations.local_exp[1]:
-            #    coeffs[index][tpl[0]] = tpl[1]
-
-        return coeffs, np.array(intercepts)
+        return coefficients, np.array(intercepts)

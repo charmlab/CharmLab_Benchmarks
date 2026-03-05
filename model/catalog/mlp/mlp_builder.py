@@ -273,8 +273,7 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         # should return a list of 1s or 0s.
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
-            x = x[feature_names].values # reorder columns to match the expected feature order
-            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)
@@ -301,8 +300,7 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
-            x = x[feature_names].values # reorder columns to match the expected feature order
-            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)
@@ -336,8 +334,7 @@ class PyTorchNeuralNetwork(ModelObject, torch.nn.Module):
         # ensure input is in tensor format for PyTorch models, and in the correct feature order as specified by the DataObject
         if isinstance(x, pd.DataFrame):
             feature_names = self._data_object.get_feature_names(expanded=True)
-            x = x[feature_names].values # reorder columns to match the expected feature order
-            x_numeric = np.array(x, dtype=np.float32) # ensure input is numeric and in numpy array format
+            x_numeric = x[feature_names].to_numpy(dtype=np.float32) # reorder columns to match the expected feature order
             x_tensor = torch.tensor(x_numeric, dtype=torch.float32, device=self._device)
         elif isinstance(x, torch.Tensor):
             x_tensor = x.to(self._device)

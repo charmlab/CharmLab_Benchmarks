@@ -42,7 +42,7 @@ class DataObject:
             config_override (Optional[Dict[str, Any]]): Optional dictionary of config overrides.
         """
         self._metadata = {}
-        self._raw_df = pd.read_csv(data_path)
+        self._raw_df = pd.read_csv(data_path).sample(frac=1, random_state=1).reset_index(drop=True)
         self._processed_df = self._raw_df.copy() # This will be transformed in place through the preprocessing pipeline.
         
         if config_path is not None:

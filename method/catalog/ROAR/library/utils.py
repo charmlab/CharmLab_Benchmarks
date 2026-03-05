@@ -164,7 +164,7 @@ def roar_recourse(
 
     # Placeholder values for first loop
     loss = torch.tensor(1)
-    loss_diff = 1 + loss_threshold
+    loss_diff = 1
     f_x_new = 0
 
     t0 = datetime.datetime.now()
@@ -224,4 +224,5 @@ def roar_recourse(
             break
 
     # x_new = reconstruct_encoding_constraints(x_new, cat_feature_indices)
+    # print(f"This is the value of x_new {x_new}")
     return x_new.cpu().detach().numpy().squeeze(axis=0)

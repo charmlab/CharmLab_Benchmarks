@@ -173,4 +173,8 @@ class Distance(EvaluationObject):
 
         distances = _get_distances(arr_f, arr_cf)
 
-        return pd.DataFrame(distances, columns=self.columns)
+        df = pd.DataFrame(distances, columns=self.columns)
+
+        print(f"average L1 distance is {df['L1_distance'].mean()}")
+
+        return df

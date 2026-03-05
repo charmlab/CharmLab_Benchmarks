@@ -3,7 +3,7 @@ lr: 0.001
 lambda_: 0.1
 delta_max: 0.1
 norm: 1
-t_max_min: 1
+t_max_min: 0.5
 loss_type: "BCE" # MSE, BCE
 y_target: [0, 1] # [0, 1] if BCE, [1] if MSE
 binary_cat_features: False
