@@ -61,10 +61,10 @@ class LARR(MethodObject):
         # print(f"This is what the training data looks like before passing to LARR {X_train}")
 
         predictions = self._model.predict(X_train)
-
         recourse_needed = X_train.iloc[
             np.where(predictions == 0)
         ]
+
         # print(f"this is what recourse needed looks like {recourse_needed}")
         if len(recourse_needed) == 0:
             raise ValueError("No recourse needed for any instance in the training data. Please check your model and data.")
@@ -73,7 +73,7 @@ class LARR(MethodObject):
             recourse_needed_X=recourse_needed.to_numpy(),
             predict_fn=self._model.predict,
             X_train=X_train.to_numpy(),
-            predict_proba_fn=self._model.predict_proba,
+            # predict_proba_fn=self._model.predict_proba,
             predict_label_fn=self._model.predict_both_classes
         )
 
