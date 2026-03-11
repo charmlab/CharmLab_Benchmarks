@@ -7,7 +7,6 @@ import yaml
 
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from evaluation.utils import check_counterfactuals
 from experiment_utils import deep_merge, reconstruct_encoding_constraints
 from method.method_factory import register_method
 from method.method_object import MethodObject
@@ -60,7 +59,7 @@ class Revise(MethodObject):
         )
         if vae_params['train']:
             self.vae.fit(
-                xtrain=self._model.get_train_data()[0],
+                xtrain=self._model.get_train_data()[0][self._feature_order],
                 lambda_reg=vae_params['lambda_reg'],
                 epochs=vae_params['epochs'],
                 lr=vae_params['lr'],

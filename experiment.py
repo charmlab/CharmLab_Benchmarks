@@ -23,6 +23,7 @@ import method.catalog.FACE.method  # noqa: F401
 import method.catalog.ClaPROAR.method  # noqa: F401
 import method.catalog.REVISE.method # noqa: F401
 import method.catalog.GRAVITATIONAL.method # noqa: F401
+import method.catalog.CCHVAE.method # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -56,6 +57,7 @@ _METHOD_CONFIG_PATHS = {
     "ClaPROAR": "method/catalog/ClaPROAR/library/config.yml",
     "REVISE": "method/catalog/REVISE/library/config.yml",
     "GRAVITATIONAL" : "method/catalog/GRAVITATIONAL/library/config.yml",
+    "CCHVAE" : "method/catalog/CCHVAE/library/config.yml",
     # add more method types and their config paths here
 }
 
