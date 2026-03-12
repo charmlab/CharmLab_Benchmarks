@@ -46,6 +46,7 @@ class RBR(MethodObject):
         self._max_iter = self.config["max_iter"]
         self._device = self.config["device"]
         self._clamp = self.config["clamp"]
+        self._verbose = self.config["verbose"]
 
         x_train, _ = self._model.get_train_data()
 
@@ -85,7 +86,8 @@ class RBR(MethodObject):
                 epsilon_pe=self._epsilon_pe,
                 max_iter=self._max_iter,
                 device=self._device,
-                clamp=self._clamp
+                clamp=self._clamp,
+                verbose=self._verbose
             )
 
             cfs.append(counterfactual)

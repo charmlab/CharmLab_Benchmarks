@@ -25,7 +25,7 @@ def l2_projection(x: torch.Tensor, radius: float) -> torch.Tensor:
     x: shape (..., d)
     radius: scalar
     """
-    norm = torch.linalg.norm(x, ord=2, axis=-1)
+    norm = torch.linalg.norm(x, ord=2, dim=-1)
     # avoid divide by zero
     denom = torch.max(norm, torch.tensor(radius, device=x.device))
     scale = (radius / denom).unsqueeze(1)
@@ -56,7 +56,7 @@ class OptimisticLikelihood(torch.nn.Module):
         return result.to(self.device)
 
     def _forward(self, v: torch.Tensor, x: torch.Tensor, x_feas: torch.Tensor):
-        c = torch.linalg.norm(x - x_feas, axis=-1)
+        c = torch.linalg.norm(x - x_feas, dim=-1)
         d = v[..., 1] + self.sigma
         p = self.x_dim
         L = (
@@ -67,7 +67,7 @@ class OptimisticLikelihood(torch.nn.Module):
         return L
 
     def forward(self, v: torch.Tensor, x: torch.Tensor, x_feas: torch.Tensor):
-        c = torch.linalg.norm(x - x_feas, axis=-1)
+        c = torch.linalg.norm(x - x_feas, dim=-1)
         d = v[..., 1] + self.sigma
         p = self.x_dim
 
@@ -140,7 +140,7 @@ class PessimisticLikelihood(torch.nn.Module):
     def _forward(
         self, u: torch.Tensor, x: torch.Tensor, x_feas: torch.Tensor, zeta: float = 1e-6
     ):
-        c = torch.linalg.norm(x - x_feas, axis=-1)
+        c = torch.linalg.norm(x - x_feas, dim=-1)
         d = u[..., 1] + self.sigma
         p = self.x_dim
         # p = p.float()
@@ -162,7 +162,7 @@ class PessimisticLikelihood(torch.nn.Module):
     def forward(
         self, u: torch.Tensor, x: torch.Tensor, x_feas: torch.Tensor, zeta: float = 1e-6
     ):
-        c = torch.linalg.norm(x - x_feas, axis=-1)
+        c = torch.linalg.norm(x - x_feas, dim=-1)
         d = u[..., 1] + self.sigma
         p = self.x_dim
 
@@ -322,7 +322,7 @@ def rbr_recourse(
     
     rng = check_random_state(random_state)
 
-    if train_t is None:
+    if train_t is None or train_label is None:
         raise ValueError("train data (tensor) must be provided to robust_bayesian_recourse")
 
     # ------- Implementation of fit_instance() ------------------
@@ -470,7 +470,7 @@ def make_prediction(x, model):
 
 # find boundary point between x0 and nearest opposite-label train point
 def dist(a: torch.Tensor, b: torch.Tensor):
-    return torch.linalg.norm(a - b, ord=1, axis=-1)
+    return torch.linalg.norm(a - b, ord=1, dim=-1)
 
 # feasible set sampled around x_b
 def uniform_ball(x: torch.Tensor, r: float, n: int, rng_state, device: torch.device):

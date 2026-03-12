@@ -1,14 +1,11 @@
 
 import pandas as pd
 import numpy as np
-from typing import Any, Dict, Dict, Optional, Tuple
-from lime.lime_tabular import LimeTabularExplainer
-from sklearn.linear_model import LogisticRegression
-import torch
+from typing import Any, Dict, Dict, Optional
 import yaml
 from data.data_object import DataObject
 from evaluation.utils import check_counterfactuals
-from method.catalog.PROBE.library.utils import probe_recourse, perturb_sample
+from method.catalog.PROBE.library.utils import probe_recourse
 from method.method_factory import register_method
 from method.method_object import MethodObject
 from model.model_object import ModelObject

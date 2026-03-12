@@ -7,3 +7,4 @@ epsilon_pe: 1.0
 max_iter: 1000
 device: "cpu"
 clamp: False
+verbose: False

@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import math
@@ -107,7 +107,7 @@ def probe_recourse(
     invalidation_target: float = 0.45,
     inval_target_eps: float = 0.005,
     noise_variance: float = 0.01
-) -> np.ndarray:
+) -> Tuple[np.ndarray, torch.tensor]:
     """
     Generate counterfactual explanation for a given input sample using PROBE method.
     """
