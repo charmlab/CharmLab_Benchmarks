@@ -8,8 +8,6 @@ class GermanData(DataObject):
     def __init__(self, data_path: str, config_path: str = None, config_override: Optional[Dict[str, Any]] = None):
         super().__init__(data_path, config_path, config_override)
         
-        self.get_preprocessing()
-
     def get_preprocessing(self):
         """
         Executes the main preprocessing pipeline based on the YAML configuration.

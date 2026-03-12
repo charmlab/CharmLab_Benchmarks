@@ -46,7 +46,7 @@ class Revise(MethodObject):
 
         vae_params = self.config['vae_params']
 
-        print([int(sum(self._model.get_mutable_mask()))] + vae_params['layers'])
+        logging.debug([int(sum(self._model.get_mutable_mask()))] + vae_params['layers'])
 
         self.vae = (
             vae 
@@ -149,8 +149,8 @@ class Revise(MethodObject):
 
                 # output_soft = self._model(cf_soft)[0]
                 output_soft = self._model.predict_proba(cf_soft).squeeze()
-                output_hard = self._model.predict(cf_hard)[0][0]
-                predicted = output_hard
+                output_hard = self._model.predict(cf_hard)[0]
+                predicted = output_hard.item()
                 # _, predicted = torch.max(output_hard, 0)
 
                 z.requires_grad = True

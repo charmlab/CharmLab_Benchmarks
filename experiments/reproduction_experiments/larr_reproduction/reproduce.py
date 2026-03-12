@@ -20,7 +20,7 @@ raw_german_corrected = "data/catalog/german/german_corrected.csv"
 german_ds_config = "data/catalog/german/data_config_german.yml"
 corrected_german_ds_config = "data/catalog/german/data_config_german_corrected.yml"
 
-model_config_path = "model/catalog/mlp/model_config_mlp.yml"
+model_config_path = "model/catalog/mlp/config.yml"
 
 method_config_path = "method/catalog/LARR/library/config.yml"
 

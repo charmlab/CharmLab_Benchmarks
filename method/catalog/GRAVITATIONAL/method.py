@@ -61,13 +61,13 @@ class Gravitational(MethodObject):
             x_center = np.nan_to_num(x_center, nan=0.0, posinf=1e6, neginf=-1e6)
             self.x_center = x_center
 
-        self._criterion = nn.CrossEntropyLoss()
+        self._criterion = nn.BCELoss()
     
     def prediction_loss(self, x_cf):
         x_cf = x_cf.to(self.device)
-        output = self._model.predict_proba(x_cf) # TODO: Since this outputs probabilities and not logits, should the loss be BCEloss?
+        output = self._model.predict_proba(x_cf)[:, 1] # TODO: Since this outputs probabilities and not logits, should the loss be BCEloss?
         target_class = torch.tensor(
-            [self._target_class] * output.size(0), dtype=torch.long
+            [self._target_class] * output.size(0), dtype=torch.float32
         ).to(self.device)
         loss = self._criterion(output, target_class)
         return loss

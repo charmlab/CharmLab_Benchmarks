@@ -1,10 +1,11 @@
 
 import math
-from typing import Any, Optional, Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 import torch
 from sklearn.utils import check_random_state
+import logging
 
 from experiment_utils import reconstruct_encoding_constraints
 from model.model_object import ModelObject
@@ -303,7 +304,7 @@ class RBRLoss(torch.nn.Module):
 def rbr_recourse(
     x0: np.ndarray,
     model: ModelObject,
-    cat_features_indices: Optional[Sequence[int]] = None,
+    cat_features_indices: list[list[int]] = None,
     train_t: torch.tensor= None,
     train_label: torch.tensor = None,
     num_samples: int = 200,
@@ -325,13 +326,15 @@ def rbr_recourse(
         raise ValueError("train data (tensor) must be provided to robust_bayesian_recourse")
 
     # ------- Implementation of fit_instance() ------------------
-    x0_t = torch.from_numpy(x0.copy()).float().to(device)
-    print(f"x0_t: {x0_t}")
+    x0_t = torch.from_numpy(x0.copy()).float().to(device)        
 
     # -------- Implementation of find_x_boundary() ---------------
     # find nearest opposite label examples and search along line for boundary
     x_label = make_prediction(x0_t.clone(), model).detach().to(device)
-    print(f"x_label: {x_label}")
+    
+    if verbose:
+        logging.debug(f"x0_t: {x0_t}")
+        logging.debug(f"x_label: {x_label}")
 
     dists = dist(train_t, x0_t)
     order = torch.argsort(dists)
@@ -364,7 +367,8 @@ def rbr_recourse(
 
     delta = best_dist + delta_plus
 
-    print(f"best_x_b: {best_x_b}, delta: {delta}")
+    if verbose:
+        logging.debug(f"best_x_b: {best_x_b}, delta: {delta}")
 
     X_feas = uniform_ball(best_x_b, perturb_radius, num_samples, rng, device).float().to(device)
 

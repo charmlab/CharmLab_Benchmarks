@@ -93,7 +93,7 @@ def compute_invalidation_rate(model, random_samples):
 def probe_recourse(
     model: ModelObject,
     x: np.ndarray,
-    cat_feature_indices: List[int],
+    cat_feature_indices: List[list[int]],
     binary_cat_features: bool = True,
     feature_costs: Optional[List[float]] = None,
     lr: float = 0.001,
@@ -115,7 +115,7 @@ def probe_recourse(
 
     torch.manual_seed(0)
 
-    noise_variance = torch.tensor(noise_variance)
+    noise_variance = torch.tensor(noise_variance, dtype=torch.float32, device=device)
 
     x = torch.tensor(x, dtype=torch.float32, device=device)
     y_target = torch.tensor(y_target, dtype=torch.float32, device=device)
@@ -245,8 +245,6 @@ def probe_recourse(
         logging.info("No Counterfactual Explanation Found at that Target Rate - Try Different Target")
     else:
         logging.info("Counterfactual Explanation Found")
-        print(costs)
-        print(ces)
         costs = torch.tensor(costs)
         min_idx = int(torch.argmin(costs).numpy())
         x_new_enc = ces[min_idx]

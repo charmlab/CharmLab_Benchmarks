@@ -94,9 +94,12 @@ class Face(MethodObject):
 
         df = self._data.get_processed_data().copy().drop(columns=self._data.get_target_column()) # get a copy of the data without the target column
 
-        cond = df.isin(factuals).to_numpy()
+        # cond = df.isin(factuals).to_numpy()
 
-        df = df.drop(index=df[cond].index) # drop rows that are the same as the factuals
+        # df = df.drop(index=df[cond].index) # drop rows that are the same as the factuals
+        merged = df.merge(factuals, how='outer', indicator=True)
+
+        df = merged[merged['_merge'] == 'left_only'].drop(columns=['_merge'])
 
         df = pd.concat([factuals, df], ignore_index=True) # add the factuals back to the data on top
 

@@ -22,7 +22,7 @@ raw_german_corrected = "data/catalog/german/german_corrected.csv"
 german_ds_config = "data/catalog/german/data_config_german.yml"
 corrected_german_ds_config = "data/catalog/german/data_config_german_corrected.yml"
 
-model_config_path = "model/catalog/mlp/model_config_mlp.yml"
+model_config_path = "model/catalog/mlp/config.yml"
 
 method_config_path = "method/catalog/RBR/library/config.yml"
 
@@ -58,7 +58,7 @@ def run_experiment(config_path: str):
     data_set_future = german_future_object.get_processed_data()
 
     # sample 20% of the corrected data and append to the original data
-    data_set_future = np.concat([data_set_current.to_numpy(), data_set_future.sample(frac=0.2, random_state=42).to_numpy()], axis=0)
+    data_set_future = np.concatenate([data_set_current.to_numpy(), data_set_future.sample(frac=0.2, random_state=42).to_numpy()], axis=0)
 
     # Update the german_future_object
     german_future_object.set_processed_data(pd.DataFrame(data_set_future, columns=german_future_object.get_processed_data().columns))

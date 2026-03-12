@@ -106,7 +106,7 @@ class PROBE(MethodObject):
         cfs = np.array(cfs)
         df_cfs = pd.DataFrame(cfs, columns=self._data.get_feature_names(expanded=True)) # ensure the feature ordering is correct for the model input
         df_cfs = check_counterfactuals(self._model, self._data, df_cfs, factuals.index)
-        print(f"average invalidation rate of generated counterfactuals: {np.mean(inval_rates):.4f}")
+        logging.info(f"average invalidation rate of generated counterfactuals: {np.mean(inval_rates):.4f}")
         # df_cfs = self._model.get_ordered_features(df_cfs)
 
         return df_cfs

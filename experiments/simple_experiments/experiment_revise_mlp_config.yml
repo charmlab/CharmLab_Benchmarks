@@ -33,6 +33,8 @@ data:
 model:
   name: "mlp" # Options: "mlp", "logistic_regression", etc.
   overrides:
+    # n_output: 2
+    # output_activation: "softmax"
 
 # ---------- Method Layer ----------
 method:

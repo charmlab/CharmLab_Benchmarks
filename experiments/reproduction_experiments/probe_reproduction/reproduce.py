@@ -5,7 +5,7 @@ import pandas as pd
 
 from data.catalog.compas.data import CompasData
 from evaluation.evaluation_factory import create_evaluations
-from experiment_utils import load_yaml, resolve_layer_config, select_factuals, select_factuals, setup_logging
+from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
 from method.method_factory import create_method
 from model.catalog.mlp.mlp import PyTorchNeuralNetwork
 
@@ -19,7 +19,7 @@ raw_compas_carla = "data/catalog/compas/compas_carla.csv"
 
 compas_carla_ds_config = "data/catalog/compas/data_config_compas_carla.yml"
 
-model_config_path = "model/catalog/mlp/model_config_mlp.yml"
+model_config_path = "model/catalog/mlp/config.yml"
 
 method_config_path = "method/catalog/PROBE/library/config.yml"
 

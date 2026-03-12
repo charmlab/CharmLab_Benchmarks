@@ -298,7 +298,7 @@ class LARRecourse:
                     x_0: np.ndarray, 
                     coeff: np.ndarray,
                     intercept: float, 
-                    cat_features_indices: List[int],
+                    cat_features_indices: List[list[int]],
                     beta: float = 1,):
         
         self.set_weights(coeff)

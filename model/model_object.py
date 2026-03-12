@@ -74,7 +74,10 @@ class ModelObject(ABC):
         mutable_mask: np.array(bool)
         """
         # get categorical features
-        categorical = self._data_object.get_categorical_features(expanded=True)
+        cat_list = self._data_object.get_categorical_features(expanded=True)
+        categorical = []
+        for row in cat_list:
+            categorical += row
         # get the binary encoded categorical features
         encoded_categorical = categorical
         # get the immutables, where the categorical features are in encoded format

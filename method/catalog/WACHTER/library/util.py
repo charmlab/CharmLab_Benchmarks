@@ -15,7 +15,7 @@ DECISION_THRESHOLD = 0.5
 def wachter_recourse(
     model: ModelObject,
     x: np.ndarray,
-    cat_feature_indices: List[int],
+    cat_feature_indices: List[list[int]],
     feature_costs: Optional[List[float]],
     lr: float,
     lambda_param: float,

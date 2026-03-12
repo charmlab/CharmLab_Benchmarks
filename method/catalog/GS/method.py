@@ -66,9 +66,6 @@ class GrowingSpheres(MethodObject):
         keys_mutable_continuous = list(set(self._mutables) - set(self._categorical_enc))
         keys_mutable_binary = list(set(self._mutables) - set(self._continuous))
 
-        print(f"keys_mutable_continuous {keys_mutable_continuous}")
-        print(f"keys_mutable_binary {keys_mutable_binary}")
-
         cfs = []
         for index, row in factuals.iterrows():
 
