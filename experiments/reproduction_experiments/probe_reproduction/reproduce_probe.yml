@@ -16,7 +16,6 @@ data:
     overrides:
       train_split: 0.75
       balance_classes: false
-      preprocessing_strategy: "standardize"
 
 # ---------- Model Layer ----------
 model:
