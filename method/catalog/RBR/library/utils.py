@@ -326,15 +326,16 @@ def rbr_recourse(
         raise ValueError("train data (tensor) must be provided to robust_bayesian_recourse")
 
     # ------- Implementation of fit_instance() ------------------
-    x0_t = torch.from_numpy(x0.copy()).float().to(device)        
+    x0_arr = np.asarray(x0, dtype=np.float32).reshape(-1)
+    x0_t = torch.from_numpy(x0_arr.copy()).float().to(device)        
 
     # -------- Implementation of find_x_boundary() ---------------
     # find nearest opposite label examples and search along line for boundary
     x_label = make_prediction(x0_t.clone(), model).detach().to(device)
     
-    if verbose:
-        logging.debug(f"x0_t: {x0_t}")
-        logging.debug(f"x_label: {x_label}")
+    
+    logging.info(f"x0_t: {x0_t}")
+    logging.info(f"x_label: {x_label}")
 
     dists = dist(train_t, x0_t)
     order = torch.argsort(dists)
@@ -357,18 +358,14 @@ def rbr_recourse(
 
     if best_x_b is None:
         # fallback: nearest opposite neighbor directly
-        opp_idx = (train_label == (1 - x_label)).nonzero(as_tuple=False)
-        if opp_idx.shape[0] == 0:
-            # can't find opposite label in train set -> return original
-            return x0.copy()
-        first_idx = opp_idx[0, 0].item()
-        best_x_b = train_t[first_idx].detach().clone()
+        if candidates.shape[0] == 0:
+            return x0_arr.copy()
+        best_x_b = candidates[0].detach().clone()  # nearest opposite candidate
         best_dist = dist(x0_t, best_x_b)
 
     delta = best_dist + delta_plus
 
-    if verbose:
-        logging.debug(f"best_x_b: {best_x_b}, delta: {delta}")
+    logging.info(f"best_x_b: {best_x_b}, delta: {delta}")
 
     X_feas = uniform_ball(best_x_b, perturb_radius, num_samples, rng, device).float().to(device)
 
@@ -475,13 +472,14 @@ def dist(a: torch.Tensor, b: torch.Tensor):
 # feasible set sampled around x_b
 def uniform_ball(x: torch.Tensor, r: float, n: int, rng_state, device: torch.device):
     rng_local = check_random_state(rng_state)
+    x_vec = x.detach().reshape(-1).cpu().numpy()
     # print(f"this is x: {x}")
-    d = x.shape[0]
+    d = x_vec.shape[0]
     # print(d)
     V = rng_local.randn(n, d)
     V = V / np.linalg.norm(V, axis=1).reshape(-1, 1)
     V = V * (rng_local.random(n) ** (1.0 / d)).reshape(-1, 1)
-    V = V * r + x.cpu().numpy()
+    V = V * r + x_vec.reshape(1, -1)
     return torch.from_numpy(V).float().to(device)
 
 def simplex_projection(x, delta, device):

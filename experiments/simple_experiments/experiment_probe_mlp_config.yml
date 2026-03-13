@@ -38,6 +38,7 @@ model:
 method:
   name: "PROBE"  # Options: "ROAR", "PROBE", etc.
   overrides:
+    y_target: [0.45, 0.55]
     # lambda_: 0.1
     # loss_type: "BCE"
 
