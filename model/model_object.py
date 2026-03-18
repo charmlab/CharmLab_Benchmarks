@@ -47,6 +47,8 @@ class ModelObject(ABC):
         # get training data from the data object and fit the model
         X_train, X_test, y_train, y_test = self._data_object.get_train_test_split()
 
+        self.feature_order = self._data_object.get_feature_names(expanded=True)
+
         self._x_train = X_train
         self._y_train = y_train
         self._x_test = X_test

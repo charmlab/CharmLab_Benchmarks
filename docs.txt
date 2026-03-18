@@ -1,0 +1,427 @@
+"""
+CharmLab Benchmarks: Public Library-Style Documentation
+======================================================
+
+Overview
+--------
+CharmLab Benchmarks is a layered framework for running tabular counterfactual recourse experiments.
+It is designed around clear contracts between layers so users and AI agents can compose experiments,
+add plugins, and understand exactly how data and control flow through the pipeline.
+
+This documentation is intentionally interface-first:
+- It describes structure, capabilities, and contracts.
+- It does not depend on implementation details of any specific recourse method internals.
+- It is meant to function like a public library reference and reconstruction guide.
+
+
+Repository Structure
+--------------------
+Root orchestration and shared modules:
+- experiment.py
+- experiment_utils.py
+- main.py (legacy/simple example script)
+- requirements.txt
+
+Layer directories:
+- data/
+- model/
+- method/
+- evaluation/
+- experiments/
+
+
+High-Level Pipeline
+-------------------
+The canonical experiment pipeline is:
+
+1. Load top-level experiment YAML.
+2. Build data layer objects from configured datasets.
+3. Build model layer objects from configured model type and each data object.
+4. Select factual instances to explain.
+5. Build method layer object using method factory and method registry.
+6. Generate counterfactuals.
+7. Build evaluation metrics using evaluation factory and registry.
+8. Compute evaluation outputs and log results.
+
+Default orchestration assumptions:
+- The first data/model pair is the generation context.
+- If multiple models exist, the last model can be used for evaluation context
+  (for scenarios such as future validity).
+
+
+Top-Level Configuration Contract
+--------------------------------
+Top-level experiment YAML has five sections:
+- experiment
+- data
+- model
+- method
+- evaluation
+
+experiment section:
+- name: string label for run
+- seed: numeric seed value
+- num_factuals: how many factual instances to explain
+- factual_selection: strategy (for example, negative_class or all)
+- output_dir: destination path for run artifacts
+- save_results: boolean
+- output_format: csv, json, or both
+- logger: debug, info, warning, error
+
+data section:
+- list of dataset entries
+- each entry contains:
+  - name: dataset key
+  - overrides: optional nested dictionary
+
+model section:
+- name: model key
+- overrides: optional nested dictionary
+
+method section:
+- name: method key
+- overrides: optional nested dictionary
+
+evaluation section:
+- metrics: list of metric entries
+- each metric entry:
+  - name: metric key
+  - hyperparameters: optional dictionary
+
+
+Configuration Merge Behavior
+----------------------------
+Layer configs are merged using deep recursive merge semantics:
+- Base layer config is loaded first.
+- Top-level overrides are recursively merged on top.
+- Nested dictionaries merge by key.
+- Non-dictionary values are replaced by override values.
+
+This enables:
+- keeping canonical defaults in layer-local config files,
+- while changing only experiment-specific fields in top-level YAML.
+
+
+Layer 1: Experiment Layer
+-------------------------
+Primary responsibility:
+- End-to-end orchestration from config to results.
+
+Main entrypoint:
+- run_experiment(config_path: str)
+
+Core capabilities:
+1. Loads top-level config.
+2. Resolves per-layer merged configs.
+3. Instantiates and wires data, model, method, and evaluation objects.
+4. Selects factual rows.
+5. Triggers counterfactual generation.
+6. Triggers metric computation.
+7. Logs run progress and metric outputs.
+
+Expected errors:
+- Unknown model name in model section.
+- Unknown method name (raised by method factory).
+- Unknown metric name (raised by evaluation factory).
+
+
+Layer 2: Data Layer
+-------------------
+Primary abstraction:
+- DataObject
+
+Purpose:
+- Convert raw CSV datasets into model-ready feature matrices and feature metadata.
+
+Construction contract:
+- DataObject(data_path, config_path=None, config_override=None)
+
+Initialization behavior:
+- Reads config (or uses supplied merged override config).
+- Runs preprocessing pipeline immediately.
+
+Preprocessing pipeline order:
+1. Read raw data.
+2. Apply scaling strategy.
+3. Apply feature encoding.
+4. Apply class balancing (if configured/implemented).
+5. Enforce canonical feature order.
+
+Public API:
+- get_processed_data() -> pd.DataFrame
+- set_processed_data(new_processed_df: pd.DataFrame) -> None
+- get_target_column() -> str
+- get_metadata() -> dict
+- get_categorical_features(expanded: bool = True) -> list
+- get_continuous_features() -> list
+- get_mutable_features(mutable: bool = True) -> list
+- get_train_test_split() -> tuple
+- get_feature_names(expanded: bool = True) -> list
+
+Data layer guarantees:
+- Model input columns are returned in canonical order.
+- Target column is tracked separately.
+- Mutability and categorical grouping metadata are available for method constraints.
+
+Dataset config schema expectations:
+- target_column
+- train_split
+- preprocessing_strategy
+- feature_order
+- optional post_encoding_feat_order
+- features dictionary where each feature defines metadata such as:
+  - type
+  - node_type
+  - mutability
+  - encode
+  - encoded_feature_names
+  - actionability
+  - impute
+  - optional domain
+
+Notes on dataset specialization:
+- Dataset-specific subclasses can override preprocessing behavior while preserving
+  DataObject public API contracts.
+
+
+Layer 3: Model Layer
+--------------------
+Primary abstraction:
+- ModelObject (abstract base class)
+
+Purpose:
+- Standardize prediction interfaces for method and evaluation layers,
+  independent of backend implementation.
+
+Construction contract:
+- ModelObject(config_path=None, data_object=None, config_override=None)
+
+Initialization responsibilities:
+- Store data object and merged config.
+- Determine compute device.
+- Pull train/test split from data layer.
+
+Required abstract API:
+- get_train_accuracy() -> float
+- get_test_accuracy() -> float
+- get_auc() -> float
+- predict(x) -> array/tensor
+- predict_both_classes(x) -> array/tensor
+- predict_proba(x) -> array/tensor
+
+Utility API:
+- get_train_data() -> (X_train, y_train)
+- get_test_data() -> (X_test, y_test)
+- get_mutable_mask() -> np.ndarray(bool)
+
+Model layer guarantees:
+- Public prediction methods provide stable interface expected by methods/evaluators.
+- DataFrame input is interpreted in canonical feature order from data layer.
+
+
+Layer 4: Method Layer
+---------------------
+Primary abstraction:
+- MethodObject (abstract base class)
+
+Factory and registry:
+- register_method(name): decorator for plugin registration
+- create_method(name, data, model, config_override=None): plugin factory
+
+Purpose:
+- Provide a uniform plugin interface for generating counterfactuals.
+
+MethodObject contract:
+- Constructor receives data object, model object, optional merged config.
+- Must implement:
+  - get_counterfactuals(factuals: pd.DataFrame)
+
+Input contract:
+- factuals are expected in model-input feature space.
+- canonical expanded feature ordering should be enforced.
+
+Output contract:
+- return counterfactual dataframe aligned to feature schema expected by evaluators.
+- invalid generations are represented in a way downstream evaluation utilities can handle.
+
+Method layer design principle:
+- Orchestrator is method-agnostic.
+- New methods are added by implementing MethodObject and registering the class.
+
+Method plugin names available at orchestrator level:
+- ROAR
+- PROBE
+- RBR
+- LARR
+- WACHTER
+- GROWING_SPHERES
+- FACE
+- ClaPROAR
+- REVISE
+- GRAVITATIONAL
+- CCHVAE
+
+
+Layer 5: Evaluation Layer
+-------------------------
+Primary abstraction:
+- EvaluationObject (abstract base class)
+
+Factory and registry:
+- register_evaluation(name): decorator
+- create_evaluations(metrics_config, data, model): factory
+
+Purpose:
+- Compute quality metrics for factual and counterfactual pairs.
+
+EvaluationObject contract:
+- Constructor receives data object, model object, optional hyperparameters dict.
+- Must implement:
+  - get_evaluation(factuals: pd.DataFrame, counterfactuals: pd.DataFrame)
+
+Input contract:
+- factuals and counterfactuals should be aligned row-wise and feature-wise.
+
+Output contract:
+- metric-specific output (scalar or tabular) suitable for logging and comparison.
+
+Metric names currently exposed by registry in pipeline:
+- Distance
+- Validity
+
+
+Shared Utility Layer
+--------------------
+Utility responsibilities include:
+
+1. YAML loading:
+- load_yaml(path)
+
+2. Config merging:
+- deep_merge(base, overrides)
+- resolve_layer_config(base_config_path, overrides=None)
+
+3. Feature constraint helper:
+- reconstruct_encoding_constraints(instance, cat_features_indices)
+
+4. Run logging setup:
+- setup_logging(level_name)
+
+5. Factual selection:
+- select_factuals(model, data, X_test, experiment_config)
+
+Cross-layer utility importance:
+- These helpers are the glue enforcing consistent contracts
+  between data, model, method, and evaluation modules.
+
+
+Data and Feature Space Contracts
+--------------------------------
+Canonical feature-space rules:
+1. Data layer defines authoritative expanded feature order.
+2. Model layer consumes this order.
+3. Method layer should transform/optimize in this same order.
+4. Evaluation layer compares factual/counterfactual rows in this order.
+
+Target handling rules:
+- Feature matrices passed to models/methods exclude target column.
+- Evaluation utilities may append target predictions for validity checks.
+
+Mutability rules:
+- Mutability metadata originates in data config.
+- Methods should rely on data/model mutability utilities rather than hardcoding.
+
+
+Experiments Directory Contract
+------------------------------
+experiments/simple_experiments:
+- Contains top-level YAML examples for quick execution of different methods.
+
+experiments/reproduction_experiments:
+- Contains method-specific reproduction scripts and YAML configs for benchmark-style runs.
+- Some reproduction areas are complete, others may be placeholders.
+
+Simple experiment usage pattern:
+- Select one YAML in simple_experiments.
+- Run experiment orchestrator with --config_path.
+
+Reproduction usage pattern:
+- Run method-specific reproduce.py scripts with associated reproduce_*.yml.
+
+
+Public Extension Guide
+----------------------
+Add a new dataset:
+1. Add raw path and data-config path map entry in orchestrator.
+2. Create dataset YAML with complete feature schema.
+3. Reuse DataObject or create subclass for custom ingestion/preprocessing.
+4. Verify get_feature_names(expanded=True) is stable and correct.
+
+Add a new model:
+1. Subclass ModelObject.
+2. Implement all required prediction and metric APIs.
+3. Ensure feature ordering compatibility.
+4. Add model key mapping and construction branch in orchestrator.
+
+Add a new method plugin:
+1. Subclass MethodObject.
+2. Implement get_counterfactuals.
+3. Register via @register_method(name).
+4. Add method config file and mapping key in orchestrator.
+5. Verify output shape/schema compatibility with evaluators.
+
+Add a new evaluation metric:
+1. Subclass EvaluationObject.
+2. Implement get_evaluation.
+3. Register via @register_evaluation(name).
+4. Add metric entry in top-level YAML.
+
+
+Operational Guidance
+--------------------
+Recommended logging checkpoints per run:
+1. Experiment start and config name.
+2. Data layer loaded.
+3. Model metrics (accuracy/AUC).
+4. Factual count selected.
+5. Counterfactual count generated.
+6. Per-metric outputs.
+
+Reproducibility guidance:
+- Seed should be consistently propagated across numpy, torch, and any stochastic
+  sampling components used by methods/models.
+
+Validation guidance:
+- Always validate counterfactual outputs before metric aggregation.
+- Handle invalid counterfactual rows consistently (for example, explicit filtering).
+
+
+Quick Start
+-----------
+Typical run command:
+- python -m experiment --config_path experiments/simple_experiments/<config_file>.yml
+
+
+Audience Notes
+--------------
+For users:
+- Treat the framework as configuration-first.
+- Most work happens by changing top-level YAML and, when needed, layer configs.
+
+For AI agents:
+- Reconstruct contracts first, implementations second.
+- Preserve feature-order and metadata flow as hard invariants.
+- Maintain registry/factory architecture for extensibility.
+
+
+Summary
+-------
+CharmLab Benchmarks is a contract-driven experimental library with:
+- YAML-based layer composition,
+- strict feature-space consistency,
+- plugin-based methods and metrics,
+- and clear extension pathways.
+
+The core value is not a single algorithm implementation,
+but a reusable experimentation framework for recourse research and benchmarking.
+"""

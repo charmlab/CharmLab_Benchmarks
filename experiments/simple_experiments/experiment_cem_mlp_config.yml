@@ -1,0 +1,34 @@
+experiment:
+  name: "german_cem_mlp_experiment"
+  seed: 42
+  num_factuals: 5  # how many negative-class samples to generate counterfactuals for
+  factual_selection: "negative_class"  # Options: "negative_class", "all"
+  output_dir: "./results"
+  save_results: true
+  output_format: "csv"  # Options: "csv", "json", "both"
+  logger: "info"  # Options: "debug", "info", "warning", "error"
+
+# ---------- Data Layer ----------
+data:
+  - name: "german"
+    overrides:
+      train_split: 0.8
+
+# ---------- Model Layer ----------
+model:
+  name: "mlp" # Options: "mlp", "logistic_regression", etc.
+  overrides:
+
+# ---------- Method Layer ----------
+method:
+  name: "CEM"  # Options: "ROAR", "PROBE", etc.
+  overrides:
+
+# ---------- Evaluation Layer ----------
+evaluation:
+  metrics:
+    - name: "Distance"
+      # hyperparameters: {}  # Optional per-metric hyperparameters
+  # Future: you could add more metric objects here
+  # - name: "Sparsity"
+  # - name: "Validity"

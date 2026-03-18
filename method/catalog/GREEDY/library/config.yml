@@ -1,0 +1,5 @@
+lambda_param: 0.05
+step_size: 0.05
+max_iter: 100
+locked_features: []
+target_class: 1

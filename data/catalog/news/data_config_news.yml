@@ -1,0 +1,291 @@
+name: "online_news"
+target_column: "shares"
+train_split: 0.7
+balance_classes: false
+preprocessing_strategy: "standardize"
+cache_dir: "./.data_cache"
+
+feature_order: [
+  "url","timedelta","n_tokens_title","n_tokens_content","n_unique_tokens",
+  "n_non_stop_words","n_non_stop_unique_tokens","num_hrefs","num_self_hrefs",
+  "num_imgs","num_videos","average_token_length","num_keywords",
+  "data_channel_is_lifestyle","data_channel_is_entertainment","data_channel_is_bus",
+  "data_channel_is_socmed","data_channel_is_tech","data_channel_is_world",
+  "kw_min_min","kw_max_min","kw_avg_min","kw_min_max","kw_max_max","kw_avg_max",
+  "kw_min_avg","kw_max_avg","kw_avg_avg","self_reference_min_shares",
+  "self_reference_max_shares","self_reference_avg_sharess",
+  "weekday_is_monday","weekday_is_tuesday","weekday_is_wednesday",
+  "weekday_is_thursday","weekday_is_friday","weekday_is_saturday","weekday_is_sunday",
+  "is_weekend","LDA_00","LDA_01","LDA_02","LDA_03","LDA_04",
+  "global_subjectivity","global_sentiment_polarity",
+  "global_rate_positive_words","global_rate_negative_words",
+  "rate_positive_words","rate_negative_words",
+  "avg_positive_polarity","min_positive_polarity","max_positive_polarity",
+  "avg_negative_polarity","min_negative_polarity","max_negative_polarity",
+  "title_subjectivity","title_sentiment_polarity",
+  "abs_title_subjectivity","abs_title_sentiment_polarity"
+]
+
+post_encoding_feat_order: [
+  "url","timedelta","n_tokens_title","n_tokens_content","n_unique_tokens",
+  "n_non_stop_words","n_non_stop_unique_tokens","num_hrefs","num_self_hrefs",
+  "num_imgs","num_videos","average_token_length","num_keywords",
+  "data_channel_is_lifestyle","data_channel_is_entertainment","data_channel_is_bus",
+  "data_channel_is_socmed","data_channel_is_tech","data_channel_is_world",
+  "kw_min_min","kw_max_min","kw_avg_min","kw_min_max","kw_max_max","kw_avg_max",
+  "kw_min_avg","kw_max_avg","kw_avg_avg","self_reference_min_shares",
+  "self_reference_max_shares","self_reference_avg_sharess",
+  "weekday_is_monday","weekday_is_tuesday","weekday_is_wednesday",
+  "weekday_is_thursday","weekday_is_friday","weekday_is_saturday","weekday_is_sunday",
+  "is_weekend","LDA_00","LDA_01","LDA_02","LDA_03","LDA_04",
+  "global_subjectivity","global_sentiment_polarity",
+  "global_rate_positive_words","global_rate_negative_words",
+  "rate_positive_words","rate_negative_words",
+  "avg_positive_polarity","min_positive_polarity","max_positive_polarity",
+  "avg_negative_polarity","min_negative_polarity","max_negative_polarity",
+  "title_subjectivity","title_sentiment_polarity",
+  "abs_title_subjectivity","abs_title_sentiment_polarity"
+]
+
+features:
+
+  url:
+    short_name: "x0"
+    type: "identifier"
+    node_type: "input"
+    actionability: "none"
+    mutability: False
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+
+  timedelta:
+    short_name: "x1"
+    type: "numerical"
+    node_type: "input"
+    actionability: "none"
+    mutability: False
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  n_tokens_title:
+    short_name: "x2"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  n_tokens_content:
+    short_name: "x3"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  n_unique_tokens:
+    short_name: "x4"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  n_non_stop_words:
+    short_name: "x5"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  n_non_stop_unique_tokens:
+    short_name: "x6"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  num_hrefs:
+    short_name: "x7"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  num_self_hrefs:
+    short_name: "x8"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  num_imgs:
+    short_name: "x9"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  num_videos:
+    short_name: "x10"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  average_token_length:
+    short_name: "x11"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  num_keywords:
+    short_name: "x12"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+
+  # Channel indicators
+  data_channel_is_lifestyle:
+    short_name: "x13"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  data_channel_is_entertainment:
+    short_name: "x14"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  data_channel_is_bus:
+    short_name: "x15"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  data_channel_is_socmed:
+    short_name: "x16"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  data_channel_is_tech:
+    short_name: "x17"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  data_channel_is_world:
+    short_name: "x18"
+    type: "binary"
+    node_type: "input"
+    actionability: "any"
+    mutability: True
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "mode"
+
+  shares:
+    short_name: "y"
+    type: "numerical"
+    node_type: "output"
+    actionability: "none"
+    mutability: False
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"

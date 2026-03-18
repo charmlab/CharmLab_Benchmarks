@@ -1,0 +1,13 @@
+data_name: null
+target_class: [0, 1]
+lambda_param: 0.001
+optimizer: "RMSprop"
+lr: 0.008
+max_iter: 2000
+binary_cat_features: True
+vae_params:
+  layers: [16, 8]
+  train: True
+  epochs: 5
+  lr: 0.001
+  batch_size: 32

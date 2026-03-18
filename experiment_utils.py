@@ -93,19 +93,21 @@ def setup_logging(name: str):
     )
 
 
-def select_factuals(model: ModelObject, data: DataObject, X_test, config) -> pd.DataFrame:
+def select_factuals(model: ModelObject, X_test: pd.DataFrame, config) -> pd.DataFrame:
     num_factuals = config.get("num_factuals", 5)
     factual_selection = config.get("factual_selection", "negative_class")
 
+    df = X_test.copy()
+        
     if factual_selection == "negative_class":
-        prediction = model.predict(X_test)
-        neg_indices = np.where(prediction == 0)[0] # returns the indices
-        selected = X_test.to_numpy()[neg_indices][:num_factuals]
+        df["y"] = model.predict(X_test)
+        df = df[df["y"] == 0]
+        df = df.drop(columns=["y"]).sample(n=num_factuals, random_state=42)
     elif factual_selection == "all":
-        prediction = model.predict(X_test)
-        neg_indices = np.where(prediction == 0)[0] # returns the indices
-        selected = X_test.to_numpy()[neg_indices]
+        df["y"] = model.predict(X_test)
+        df = df[df["y"] == 0]
+        df = df.drop(columns=["y"])
     else:
         raise ValueError(f"Unknown factual selection method {factual_selection}")
     
-    return pd.DataFrame(selected, columns=data.get_feature_names(expanded=True))
+    return df

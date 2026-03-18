@@ -1,0 +1,13 @@
+optimizer: "adam"
+lr: 0.001
+n_class: 2
+n_iter: 1000
+sigma: 1.0
+temperature: 1.0
+distance_weight: 0.01
+distance_func: "l1"
+clamp: True
+clip_min: null
+clip_max: null
+enforce_encoding: True
+enforce_mutability: True

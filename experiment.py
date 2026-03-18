@@ -24,6 +24,11 @@ import method.catalog.ClaPROAR.method  # noqa: F401
 import method.catalog.REVISE.method # noqa: F401
 import method.catalog.GRAVITATIONAL.method # noqa: F401
 import method.catalog.CCHVAE.method # noqa: F401
+import method.catalog.CEM.method # noqa: F401
+import method.catalog.CLUE.method # noqa: F401
+import method.catalog.CRUDS.method # noqa: F401
+import method.catalog.FOCUS.method # noqa: F401
+import method.catalog.GREEDY.method # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -58,6 +63,11 @@ _METHOD_CONFIG_PATHS = {
     "REVISE": "method/catalog/REVISE/library/config.yml",
     "GRAVITATIONAL" : "method/catalog/GRAVITATIONAL/library/config.yml",
     "CCHVAE" : "method/catalog/CCHVAE/library/config.yml",
+    "CEM" : "method/catalog/CEM/library/config.yml",
+    "CLUE" : "method/catalog/CLUE/library/config.yml",
+    "CRUDS" : "method/catalog/CRUDS/library/config.yml",
+    "FOCUS" : "method/catalog/FOCUS/library/config.yml",
+    "GREEDY" : "method/catalog/GREEDY/library/config.yml",
     # add more method types and their config paths here
 }
 
@@ -129,7 +139,8 @@ def run_experiment(config_path: str):
 
     # ---------- Select factuals for counterfactual generation -----------
     X_test, y_test = model_objects[0].get_test_data()
-    factuals = select_factuals(model_objects[0], data_objects[0], X_test, experiment)
+    X_test[y_test.name] = y_test # add the target column back to the test data for easier factual selection based on labels
+    factuals = select_factuals(model_objects[0], X_test, experiment)
     factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 

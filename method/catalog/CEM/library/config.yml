@@ -1,0 +1,15 @@
+data_name: Null
+batch_size: 1
+kappa: 0.1
+init_learning_rate: 0.01
+binary_search_steps: 9
+max_iterations: 100
+initial_const: 10
+beta: 0.9
+gamma: 0.0
+mode: "PN"
+num_classes: 2
+ae_params:
+  hidden_layer: [20, 10, 7]
+  train_ae: True
+  epochs: 5
