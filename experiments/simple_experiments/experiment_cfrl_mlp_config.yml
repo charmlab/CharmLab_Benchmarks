@@ -1,0 +1,52 @@
+# ============================================================
+# Top-Level Experiment Configuration
+# ============================================================
+
+experiment:
+  name: "german_cfrl_mlp_experiment"
+  seed: 42
+  num_factuals: 5
+  factual_selection: "negative_class"
+  output_dir: "./results"
+  save_results: true
+  output_format: "csv"
+  logger: "info"
+
+data:
+  - name: "german"
+    overrides:
+      train_split: 0.8
+      balance_classes: false
+      preprocessing_strategy: "normalize"
+
+model:
+  name: "mlp"
+  overrides:
+    epochs: 40
+    learning_rate: 0.002
+    optimizer: "rms"
+    batch_size: 32
+    hidden_layers: [[50]]
+    n_output: 2
+    output_activation: "softmax"
+
+method:
+  name: "CFRL"
+  overrides:
+    seed: 0
+    autoencoder_batch_size: 128
+    autoencoder_target_steps: 2000
+    autoencoder_lr: 0.001
+    autoencoder_latent_dim: 15
+    autoencoder_hidden_dim: 128
+    coeff_sparsity: 0.5
+    coeff_consistency: 0.5
+    train_steps: 5000
+    batch_size: 128
+    save_path: "method/catalog/CFRL/bin"
+    train: true
+
+evaluation:
+  metrics:
+    - name: "Distance"
+    - name: "Validity"

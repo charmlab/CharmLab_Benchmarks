@@ -1,0 +1,15 @@
+seed: 0
+autoencoder_batch_size: 128
+autoencoder_target_steps: 100000
+autoencoder_lr: 0.001
+autoencoder_latent_dim: 15
+autoencoder_hidden_dim: 128
+coeff_sparsity: 0.5
+coeff_consistency: 0.5
+train_steps: 100000
+batch_size: 128
+immutable_features: null
+constrained_ranges: null
+save_path: null
+save_prefix: null
+train: true

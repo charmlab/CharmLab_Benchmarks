@@ -37,6 +37,7 @@ import method.catalog.CRUDS.method  # noqa: F401
 import method.catalog.FOCUS.method  # noqa: F401
 import method.catalog.GREEDY.method  # noqa: F401
 import method.catalog.CFVAE.method  # noqa: F401
+import method.catalog.CFRL.method  # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
@@ -80,6 +81,7 @@ _METHOD_CONFIG_PATHS = {
     "FOCUS": "method/catalog/FOCUS/library/config.yml",
     "GREEDY": "method/catalog/GREEDY/library/config.yml",
     "CFVAE": "method/catalog/CFVAE/library/config.yml",
+    "CFRL": "method/catalog/CFRL/library/config.yml",
     # add more method types and their config paths here
 }
 
