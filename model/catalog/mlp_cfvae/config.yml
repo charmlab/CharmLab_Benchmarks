@@ -1,0 +1,14 @@
+architecture: "mlp_cfvae"
+backend: "pytorch"
+cache_dir: "./.model_cache"
+load_pretrained: false
+pretrained_path: null
+
+epochs: 100
+batch_size: 32
+learning_rate: 0.001
+n_output: 2
+hidden_dim: 10
+optimizer: "adam"
+loss_function: "BCE"
+output_activation: "sigmoid"

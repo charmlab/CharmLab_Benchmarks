@@ -1,0 +1,191 @@
+name: "adult_cfvae"
+target_column: "income"
+train_split: 0.8
+balance_classes: false
+preprocessing_strategy: "normalize"
+cache_dir: "./.data_cache"
+feature_order:
+  [
+    "age",
+    "workclass",
+    "education",
+    "marital_status",
+    "occupation",
+    "race",
+    "gender",
+    "hours_per_week",
+  ]
+post_encoding_feat_order:
+  [
+    "age",
+    "workclass_cat_Government",
+    "workclass_cat_Other/Unknown",
+    "workclass_cat_Private",
+    "workclass_cat_Self-Employed",
+    "education_cat_Assoc",
+    "education_cat_Bachelors",
+    "education_cat_Doctorate",
+    "education_cat_HS-grad",
+    "education_cat_Masters",
+    "education_cat_Prof-school",
+    "education_cat_School",
+    "education_cat_Some-college",
+    "marital_status_cat_Divorced",
+    "marital_status_cat_Married",
+    "marital_status_cat_Separated",
+    "marital_status_cat_Single",
+    "marital_status_cat_Widowed",
+    "occupation_cat_Blue-Collar",
+    "occupation_cat_Other/Unknown",
+    "occupation_cat_Professional",
+    "occupation_cat_Sales",
+    "occupation_cat_Service",
+    "occupation_cat_White-Collar",
+    "race_cat_Other",
+    "race_cat_White",
+    "gender_cat_Female",
+    "gender_cat_Male",
+    "hours_per_week",
+  ]
+features:
+  age:
+    short_name: "x0"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [17, 90]
+
+  workclass:
+    short_name: "x1"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "workclass_cat_Government",
+        "workclass_cat_Other/Unknown",
+        "workclass_cat_Private",
+        "workclass_cat_Self-Employed",
+      ]
+    impute: "mode"
+
+  education:
+    short_name: "x2"
+    type: "categorical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "education_cat_Assoc",
+        "education_cat_Bachelors",
+        "education_cat_Doctorate",
+        "education_cat_HS-grad",
+        "education_cat_Masters",
+        "education_cat_Prof-school",
+        "education_cat_School",
+        "education_cat_Some-college",
+      ]
+    impute: "mode"
+
+  marital_status:
+    short_name: "x3"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "marital_status_cat_Divorced",
+        "marital_status_cat_Married",
+        "marital_status_cat_Separated",
+        "marital_status_cat_Single",
+        "marital_status_cat_Widowed",
+      ]
+    impute: "mode"
+
+  occupation:
+    short_name: "x4"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "occupation_cat_Blue-Collar",
+        "occupation_cat_Other/Unknown",
+        "occupation_cat_Professional",
+        "occupation_cat_Sales",
+        "occupation_cat_Service",
+        "occupation_cat_White-Collar",
+      ]
+    impute: "mode"
+
+  race:
+    short_name: "x5"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["race_cat_Other", "race_cat_White"]
+    impute: "mode"
+
+  gender:
+    short_name: "x6"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["gender_cat_Female", "gender_cat_Male"]
+    impute: "mode"
+
+  hours_per_week:
+    short_name: "x7"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [1, 99]
+
+  income:
+    short_name: "y"
+    type: "binary"
+    node_type: "output"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+    domain: [0, 1]

@@ -1,0 +1,16 @@
+encoded_size: 10
+train: true
+load_path: null
+save_path: null
+batch_size: 2048
+epoch: 50
+learning_rate: 0.01
+n_samples: 50
+margin: 0.2
+validity_reg: 20.0
+constraint_reg: 1.0
+preference_reg: 1.0
+sample: false
+seed: 10000000
+device: "auto"
+

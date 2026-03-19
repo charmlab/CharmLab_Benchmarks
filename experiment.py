@@ -1,14 +1,21 @@
 """
 usage example: python -m experiment --config_path experiments/simple_experiments/experiment_config.yml
 """
+
 import argparse
 import pandas as pd
 import numpy as np
 import logging
 
-from experiment_utils import load_yaml, resolve_layer_config, select_factuals, setup_logging
+from experiment_utils import (
+    load_yaml,
+    resolve_layer_config,
+    select_factuals,
+    setup_logging,
+)
 from data.data_object import DataObject
 from model.catalog.mlp.mlp import PyTorchNeuralNetwork
+from model.catalog.mlp_cfvae.mlp_cfvae import PyTorchCFVAENeuralNetwork
 from method.method_factory import create_method
 from evaluation.evaluation_factory import create_evaluations
 
@@ -21,18 +28,22 @@ import method.catalog.WACHTER.method  # noqa: F401
 import method.catalog.GS.method  # noqa: F401
 import method.catalog.FACE.method  # noqa: F401
 import method.catalog.ClaPROAR.method  # noqa: F401
-import method.catalog.REVISE.method # noqa: F401
-import method.catalog.GRAVITATIONAL.method # noqa: F401
-import method.catalog.CCHVAE.method # noqa: F401
-import method.catalog.CEM.method # noqa: F401
-import method.catalog.CLUE.method # noqa: F401
-import method.catalog.CRUDS.method # noqa: F401
-import method.catalog.FOCUS.method # noqa: F401
-import method.catalog.GREEDY.method # noqa: F401
+import method.catalog.REVISE.method  # noqa: F401
+import method.catalog.GRAVITATIONAL.method  # noqa: F401
+import method.catalog.CCHVAE.method  # noqa: F401
+import method.catalog.CEM.method  # noqa: F401
+import method.catalog.CLUE.method  # noqa: F401
+import method.catalog.CRUDS.method  # noqa: F401
+import method.catalog.FOCUS.method  # noqa: F401
+import method.catalog.GREEDY.method  # noqa: F401
+import method.catalog.CFVAE.method  # noqa: F401
+import method.catalog.CFRL.method  # noqa: F401
 import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
 _DATA_RAW_PATH = {
+    "adult_cfrl": "data/catalog/adult_cfrl/adult_cfrl.csv",
+    "adult_cfvae": "data/catalog/adult_cfvae/adult_cfvae.csv",
     "german": "data/catalog/german/german.csv",
     "german_corrected": "data/catalog/german/german_corrected.csv",
     "compas_carla": "data/catalog/compas/compas_carla.csv",
@@ -40,6 +51,8 @@ _DATA_RAW_PATH = {
 }
 
 _DATA_CONFIG_PATHS = {
+    "adult_cfrl": "data/catalog/adult_cfrl/data_config_adult_cfrl.yml",
+    "adult_cfvae": "data/catalog/adult_cfvae/data_config_adult_cfvae.yml",
     "german": "data/catalog/german/data_config_german.yml",
     "german_corrected": "data/catalog/german/data_config_german_corrected.yml",
     "compas_carla": "data/catalog/compas/data_config_compas_carla.yml",
@@ -48,6 +61,7 @@ _DATA_CONFIG_PATHS = {
 
 _MODEL_CONFIG_PATHS = {
     "mlp": "model/catalog/mlp/config.yml",
+    "mlp_cfvae": "model/catalog/mlp_cfvae/config.yml",
     # add more model types and their config paths here
 }
 
@@ -61,13 +75,15 @@ _METHOD_CONFIG_PATHS = {
     "FACE": "method/catalog/FACE/library/config.yml",
     "ClaPROAR": "method/catalog/ClaPROAR/library/config.yml",
     "REVISE": "method/catalog/REVISE/library/config.yml",
-    "GRAVITATIONAL" : "method/catalog/GRAVITATIONAL/library/config.yml",
-    "CCHVAE" : "method/catalog/CCHVAE/library/config.yml",
-    "CEM" : "method/catalog/CEM/library/config.yml",
-    "CLUE" : "method/catalog/CLUE/library/config.yml",
-    "CRUDS" : "method/catalog/CRUDS/library/config.yml",
-    "FOCUS" : "method/catalog/FOCUS/library/config.yml",
-    "GREEDY" : "method/catalog/GREEDY/library/config.yml",
+    "GRAVITATIONAL": "method/catalog/GRAVITATIONAL/library/config.yml",
+    "CCHVAE": "method/catalog/CCHVAE/library/config.yml",
+    "CEM": "method/catalog/CEM/library/config.yml",
+    "CLUE": "method/catalog/CLUE/library/config.yml",
+    "CRUDS": "method/catalog/CRUDS/library/config.yml",
+    "FOCUS": "method/catalog/FOCUS/library/config.yml",
+    "GREEDY": "method/catalog/GREEDY/library/config.yml",
+    "CFVAE": "method/catalog/CFVAE/library/config.yml",
+    "CFRL": "method/catalog/CFRL/library/config.yml",
     # add more method types and their config paths here
 }
 
@@ -90,17 +106,20 @@ def run_experiment(config_path: str):
     # this is useful mostly for the evaluation layer, where some metrics might require multiple datasets (e.g. future validity).
     data_configs_merged = []
     for data in data_section:
-        data_configs_merged.append(resolve_layer_config(
-            _DATA_CONFIG_PATHS[data["name"]],
-            data.get("overrides")
-        ))
+        data_configs_merged.append(
+            resolve_layer_config(
+                _DATA_CONFIG_PATHS[data["name"]], data.get("overrides")
+            )
+        )
 
     data_objects = []
     for i, data in enumerate(data_section):
-        data_objects.append(DataObject(
-            data_path=_DATA_RAW_PATH[data["name"]],
-            config_override=data_configs_merged[i]
-        ))
+        data_objects.append(
+            DataObject(
+                data_path=_DATA_RAW_PATH[data["name"]],
+                config_override=data_configs_merged[i],
+            )
+        )
 
     logger.info("Data layer loaded and configured.")
 
@@ -110,8 +129,7 @@ def run_experiment(config_path: str):
     # but trained on different data (useful for future validity).
     model_section = exp_config["model"]
     model_config_merged = resolve_layer_config(
-        _MODEL_CONFIG_PATHS[model_section["name"]],
-        model_section.get("overrides")
+        _MODEL_CONFIG_PATHS[model_section["name"]], model_section.get("overrides")
     )
 
     model_objects = []
@@ -119,14 +137,21 @@ def run_experiment(config_path: str):
         # Since we likely wont have too many different kinds of models,
         # I wont make use of a factory pattern, just use a simple loop and if statements.
         if model_section["name"] == "mlp":
-            model_objects.append(PyTorchNeuralNetwork(
-                data_object=data_obj,
-                config_override=model_config_merged
-            ))
+            model_objects.append(
+                PyTorchNeuralNetwork(
+                    data_object=data_obj, config_override=model_config_merged
+                )
+            )
+        elif model_section["name"] == "mlp_cfvae":
+            model_objects.append(
+                PyTorchCFVAENeuralNetwork(
+                    data_object=data_obj, config_override=model_config_merged
+                )
+            )
         else:
             raise ValueError(f"Unknown model type {model_section['name']}")
 
-    # we make the assumtion that the first model is the main one used to 
+    # we make the assumtion that the first model is the main one used to
     # help generate counterfactuals.
     # logger.info(f"Train accuracy M1: {model_objects[0].get_train_accuracy():.4f}")
     logger.info(f"Test accuracy M1:  {model_objects[0].get_test_accuracy():.4f}")
@@ -139,27 +164,34 @@ def run_experiment(config_path: str):
 
     # ---------- Select factuals for counterfactual generation -----------
     X_test, y_test = model_objects[0].get_test_data()
-    X_test[y_test.name] = y_test # add the target column back to the test data for easier factual selection based on labels
+    X_test[y_test.name] = (
+        y_test  # add the target column back to the test data for easier factual selection based on labels
+    )
     factuals = select_factuals(model_objects[0], X_test, experiment)
-    factuals = factuals.astype(np.float32) # ensure factuals are in numeric format for the methods
+    factuals = factuals.astype(
+        np.float32
+    )  # ensure factuals are in numeric format for the methods
     logger.info(f"Selected {len(factuals)} factual instances.")
 
     # ---------- Method layer loading and config merging -----------
     method_section = exp_config["method"]
     method_config_merged = resolve_layer_config(
-        _METHOD_CONFIG_PATHS[method_section["name"]],
-        method_section.get("overrides")
+        _METHOD_CONFIG_PATHS[method_section["name"]], method_section.get("overrides")
     )
 
     method_object = create_method(
         name=method_section["name"],
-        model=model_objects[0],  # Assuming the first model object is used for the method
+        model=model_objects[
+            0
+        ],  # Assuming the first model object is used for the method
         data=data_objects[0],  # Assuming the first data object is used for the method
-        config_override=method_config_merged
+        config_override=method_config_merged,
     )
 
     counterfactuals = method_object.get_counterfactuals(factuals)
-    logger.info(f"Generated counterfactuals for {len(counterfactuals)} factual instances.")
+    logger.info(
+        f"Generated counterfactuals for {len(counterfactuals)} factual instances."
+    )
 
     # ---------- Evaluation layer loading and config merging -----------
     evaluation_section = exp_config["evaluation"]
@@ -167,24 +199,30 @@ def run_experiment(config_path: str):
     evaluations = create_evaluations(
         metrics_config=evaluation_section["metrics"],
         data=data_objects[0],  # Assuming the first data object is used for evaluation
-        model=model_objects[-1]  # Assuming the last model object is used for evaluation - specifically for future validity.
+        model=model_objects[
+            -1
+        ],  # Assuming the last model object is used for evaluation - specifically for future validity.
     )
 
     results = []
     for eval_module in evaluations:
         eval_result = eval_module.get_evaluation(factuals, counterfactuals)
         results.append(eval_result)
-        logger.info(f"Evaluation {eval_module.__class__.__name__} results: {eval_result}")
+        logger.info(
+            f"Evaluation {eval_module.__class__.__name__} results: {eval_result}"
+        )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run a counterfactual explanation experiment.")
+    parser = argparse.ArgumentParser(
+        description="Run a counterfactual explanation experiment."
+    )
     parser.add_argument(
-        "--config_path", 
-        type=str, 
-        required=True, 
-        help="Path to the experiment config YAML file.")
+        "--config_path",
+        type=str,
+        required=True,
+        help="Path to the experiment config YAML file.",
+    )
     args = parser.parse_args()
 
     run_experiment(args.config_path)
-
