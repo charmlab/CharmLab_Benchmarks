@@ -42,6 +42,7 @@ import evaluation.catalog.distances  # noqa: F401
 import evaluation.catalog.validity  # noqa: F401
 
 _DATA_RAW_PATH = {
+    "adult_cfrl": "data/catalog/adult_cfrl/adult_cfrl.csv",
     "adult_cfvae": "data/catalog/adult_cfvae/adult_cfvae.csv",
     "german": "data/catalog/german/german.csv",
     "german_corrected": "data/catalog/german/german_corrected.csv",
@@ -50,6 +51,7 @@ _DATA_RAW_PATH = {
 }
 
 _DATA_CONFIG_PATHS = {
+    "adult_cfrl": "data/catalog/adult_cfrl/data_config_adult_cfrl.yml",
     "adult_cfvae": "data/catalog/adult_cfvae/data_config_adult_cfvae.yml",
     "german": "data/catalog/german/data_config_german.yml",
     "german_corrected": "data/catalog/german/data_config_german_corrected.yml",

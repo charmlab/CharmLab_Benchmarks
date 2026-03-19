@@ -1,0 +1,307 @@
+name: "adult_cfrl"
+target_column: "Target"
+train_split: 0.8
+balance_classes: false
+preprocessing_strategy: "normalize"
+cache_dir: "./.data_cache"
+feature_order:
+  [
+    "Age",
+    "Workclass",
+    "Education",
+    "Marital Status",
+    "Occupation",
+    "Relationship",
+    "Race",
+    "Sex",
+    "Capital Gain",
+    "Capital Loss",
+    "Hours per week",
+    "Country",
+  ]
+post_encoding_feat_order:
+  [
+    "Age",
+    "Workclass_cat_?",
+    "Workclass_cat_Federal-gov",
+    "Workclass_cat_Local-gov",
+    "Workclass_cat_Never-worked",
+    "Workclass_cat_Private",
+    "Workclass_cat_Self-emp-inc",
+    "Workclass_cat_Self-emp-not-inc",
+    "Workclass_cat_State-gov",
+    "Workclass_cat_Without-pay",
+    "Education_cat_Associates",
+    "Education_cat_Bachelors",
+    "Education_cat_Doctorate",
+    "Education_cat_Dropout",
+    "Education_cat_High School grad",
+    "Education_cat_Masters",
+    "Education_cat_Prof-School",
+    "Marital Status_cat_Married",
+    "Marital Status_cat_Never-Married",
+    "Marital Status_cat_Separated",
+    "Marital Status_cat_Widowed",
+    "Occupation_cat_?",
+    "Occupation_cat_Admin",
+    "Occupation_cat_Blue-Collar",
+    "Occupation_cat_Military",
+    "Occupation_cat_Other",
+    "Occupation_cat_Professional",
+    "Occupation_cat_Sales",
+    "Occupation_cat_Service",
+    "Occupation_cat_White-Collar",
+    "Relationship_cat_Husband",
+    "Relationship_cat_Not-in-family",
+    "Relationship_cat_Other-relative",
+    "Relationship_cat_Own-child",
+    "Relationship_cat_Unmarried",
+    "Relationship_cat_Wife",
+    "Race_cat_Amer-Indian-Eskimo",
+    "Race_cat_Asian-Pac-Islander",
+    "Race_cat_Black",
+    "Race_cat_Other",
+    "Race_cat_White",
+    "Sex_cat_Female",
+    "Sex_cat_Male",
+    "Capital Gain",
+    "Capital Loss",
+    "Hours per week",
+    "Country_cat_?",
+    "Country_cat_British-Commonwealth",
+    "Country_cat_China",
+    "Country_cat_Euro_1",
+    "Country_cat_Euro_2",
+    "Country_cat_Latin-America",
+    "Country_cat_Other",
+    "Country_cat_SE-Asia",
+    "Country_cat_South-America",
+    "Country_cat_United-States",
+    "Country_cat_Yugoslavia",
+  ]
+features:
+  Age:
+    short_name: "x0"
+    type: "numerical"
+    node_type: "input"
+    actionability: "same-or-increase"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [17, 90]
+
+  Workclass:
+    short_name: "x1"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Workclass_cat_?",
+        "Workclass_cat_Federal-gov",
+        "Workclass_cat_Local-gov",
+        "Workclass_cat_Never-worked",
+        "Workclass_cat_Private",
+        "Workclass_cat_Self-emp-inc",
+        "Workclass_cat_Self-emp-not-inc",
+        "Workclass_cat_State-gov",
+        "Workclass_cat_Without-pay",
+      ]
+    impute: "mode"
+
+  Education:
+    short_name: "x2"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Education_cat_Associates",
+        "Education_cat_Bachelors",
+        "Education_cat_Doctorate",
+        "Education_cat_Dropout",
+        "Education_cat_High School grad",
+        "Education_cat_Masters",
+        "Education_cat_Prof-School",
+      ]
+    impute: "mode"
+
+  Marital Status:
+    short_name: "x3"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Marital Status_cat_Married",
+        "Marital Status_cat_Never-Married",
+        "Marital Status_cat_Separated",
+        "Marital Status_cat_Widowed",
+      ]
+    impute: "mode"
+
+  Occupation:
+    short_name: "x4"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Occupation_cat_?",
+        "Occupation_cat_Admin",
+        "Occupation_cat_Blue-Collar",
+        "Occupation_cat_Military",
+        "Occupation_cat_Other",
+        "Occupation_cat_Professional",
+        "Occupation_cat_Sales",
+        "Occupation_cat_Service",
+        "Occupation_cat_White-Collar",
+      ]
+    impute: "mode"
+
+  Relationship:
+    short_name: "x5"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Relationship_cat_Husband",
+        "Relationship_cat_Not-in-family",
+        "Relationship_cat_Other-relative",
+        "Relationship_cat_Own-child",
+        "Relationship_cat_Unmarried",
+        "Relationship_cat_Wife",
+      ]
+    impute: "mode"
+
+  Race:
+    short_name: "x6"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Race_cat_Amer-Indian-Eskimo",
+        "Race_cat_Asian-Pac-Islander",
+        "Race_cat_Black",
+        "Race_cat_Other",
+        "Race_cat_White",
+      ]
+    impute: "mode"
+
+  Sex:
+    short_name: "x7"
+    type: "categorical"
+    node_type: "input"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names: ["Sex_cat_Female", "Sex_cat_Male"]
+    impute: "mode"
+
+  Capital Gain:
+    short_name: "x8"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [0, 99999]
+
+  Capital Loss:
+    short_name: "x9"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [0, 4356]
+
+  Hours per week:
+    short_name: "x10"
+    type: "numerical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "median"
+    domain: [1, 99]
+
+  Country:
+    short_name: "x11"
+    type: "categorical"
+    node_type: "input"
+    actionability: "any"
+    mutability: true
+    parent: null
+    parent_short: null
+    encode: "one-hot"
+    encoded_feature_names:
+      [
+        "Country_cat_?",
+        "Country_cat_British-Commonwealth",
+        "Country_cat_China",
+        "Country_cat_Euro_1",
+        "Country_cat_Euro_2",
+        "Country_cat_Latin-America",
+        "Country_cat_Other",
+        "Country_cat_SE-Asia",
+        "Country_cat_South-America",
+        "Country_cat_United-States",
+        "Country_cat_Yugoslavia",
+      ]
+    impute: "mode"
+
+  Target:
+    short_name: "y"
+    type: "binary"
+    node_type: "output"
+    actionability: "none"
+    mutability: false
+    parent: null
+    parent_short: null
+    encode: null
+    encoded_feature_names: null
+    impute: "drop"
+    domain: [0, 1]

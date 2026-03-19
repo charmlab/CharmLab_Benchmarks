@@ -26,6 +26,18 @@ from .cfrl_tabular import get_conditional_dim, get_he_preprocessor
 LOGGER = logging.getLogger(__name__)
 
 
+def _coerce_mapping_key(value):
+    if pd.isna(value):
+        return None
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        if float(value).is_integer():
+            return int(round(float(value)))
+        return float(value)
+    return str(value)
+
+
 class HeterogeneousEncoder(nn.Module):
     """PyTorch replica of the ADULT encoder from the Keras CFRL implementation."""
 
@@ -219,11 +231,11 @@ class CFRL(MethodObject):
                 attr_types[name] = "categorical"
                 categorical_indices.append(idx)
                 unique_vals = sorted(raw_df[name].dropna().unique().tolist())
-                mapped_unique = [int(round(v)) for v in unique_vals]
+                mapped_unique = [_coerce_mapping_key(v) for v in unique_vals]
                 raw_to_idx[name] = {val: i for i, val in enumerate(mapped_unique)}
                 idx_to_raw[name] = {i: val for i, val in enumerate(mapped_unique)}
                 category_map[idx] = [str(val) for val in mapped_unique]
-                feature_types[name] = int
+                feature_types[name] = str
             elif feature_type == "binary":
                 attr_types[name] = "binary"
                 numerical_indices.append(idx)
@@ -287,9 +299,9 @@ class CFRL(MethodObject):
                 col = raw_df[name].to_numpy()
                 if idx in self._metadata.categorical_indices:
                     mapping = self._metadata.raw_to_idx[name]
-                    raw_vals = np.rint(col).astype(int, copy=False)
-                    arr[:, idx] = np.vectorize(lambda v: mapping.get(int(v), 0))(
-                        raw_vals
+                    arr[:, idx] = np.array(
+                        [mapping.get(_coerce_mapping_key(v), 0) for v in col],
+                        dtype=np.float32,
                     )
                 else:
                     arr[:, idx] = col.astype(np.float32, copy=False)
